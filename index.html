@@ -1,0 +1,2839 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HERMES 市場分析レポート</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <style>
+        :root {
+            --primary: #FF6B00;
+            --primary-dark: #E65100;
+            --bg-dark: #1a1a2e;
+            --bg-card: #16213e;
+            --bg-card-hover: #1f2b4d;
+            --text: #eee;
+            --text-muted: #aaa;
+            --border: #333;
+            --success: #4CAF50;
+            --warning: #FFC107;
+            --danger: #f44336;
+        }
+
+        [data-theme="light"] {
+            --bg-dark: #f5f5f5;
+            --bg-card: #fff;
+            --bg-card-hover: #f9f9f9;
+            --text: #333;
+            --text-muted: #666;
+            --border: #ddd;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .theme-toggle {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: #fff;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Tab Navigation */
+        .tab-nav {
+            display: flex;
+            gap: 5px;
+            background: var(--bg-card);
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover {
+            background: var(--bg-card-hover);
+            color: var(--text);
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid var(--border);
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+        }
+
+        .stat-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        /* Charts */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .chart-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .chart-container {
+            height: 400px;
+        }
+
+        /* Tables */
+        .table-container {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            overflow-x: auto;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .search-box {
+            padding: 8px 15px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-dark);
+            color: var(--text);
+            width: 250px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: var(--bg-dark);
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            cursor: pointer;
+        }
+
+        th:hover {
+            background: var(--bg-card-hover);
+        }
+
+        tr:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .price {
+            color: var(--success);
+            font-weight: 600;
+        }
+
+        .count-badge {
+            background: var(--primary);
+            color: #fff;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+        }
+
+        .search-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 12px;
+            padding: 3px 8px;
+            border: 1px solid var(--primary);
+            border-radius: 4px;
+            margin-left: 5px;
+        }
+
+        .search-link:hover {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .search-checkbox {
+            margin-left: 5px;
+            margin-right: 10px;
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+            vertical-align: middle;
+        }
+
+
+        /* Insights */
+        .insights-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-left: 4px solid var(--primary);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--primary);
+        }
+
+        .insights-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+
+        .insight-item {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+            color: var(--text);
+        }
+
+        .insight-item::before {
+            content: "•";
+            color: var(--primary);
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-muted);
+            font-size: 12px;
+            border-top: 1px solid var(--border);
+            margin-top: 30px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>HERMES 市場分析レポート</h1>
+        <div class="header-controls">
+            <span id="dataInfo">データ期間: 2026-01-22 | 総件数: 9,735件</span>
+            <button class="theme-toggle" onclick="toggleTheme()">🌙 ダークモード</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Tab Navigation -->
+        <div class="tab-nav">
+            <button class="tab-btn active" data-tab="overview">📊 全体分析</button>
+            <button class="tab-btn" data-tab="scarf">🧣 スカーフ</button>
+            <button class="tab-btn" data-tab="bag">👜 バッグ</button>
+            <button class="tab-btn" data-tab="accessory">💍 アクセサリー</button>
+            <button class="tab-btn" data-tab="leather">💼 財布・革小物</button>
+            <button class="tab-btn" data-tab="parts">📦 付属品</button>
+            <button class="tab-btn" data-tab="other">📌 その他</button>
+        </div>
+
+        <!-- Overview Tab -->
+        <div id="overview" class="tab-content active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📦</div>
+                    <div class="stat-value">9,735</div>
+                    <div class="stat-label">総販売件数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-value">$2,744,406</div>
+                    <div class="stat-label">総売上</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📈</div>
+                    <div class="stat-value">$282</div>
+                    <div class="stat-label">平均価格</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🧣</div>
+                    <div class="stat-value">55.8%</div>
+                    <div class="stat-label">スカーフ比率</div>
+                </div>
+            </div>
+
+            <div class="insights-card">
+                <div class="insights-title">💡 マーケットインサイト</div>
+                <div class="insight-item"><strong>スカーフが主力商品:</strong> 全体の55.8%（5,430件）を占め、総売上$925,813を記録</div>
+                <div class="insight-item"><strong>カレ90が圧倒的人気:</strong> スカーフ内で53.2%（2,886件）、中央値$128.5</div>
+                <div class="insight-item"><strong>Brides de Galaが最人気柄:</strong> 183件で柄別トップ。ただし中央値$76と手頃な価格帯</div>
+                <div class="insight-item"><strong>高単価カテゴリ:</strong> バッグ（平均$898）、特にバーキン（中央値$7,722）が高収益</div>
+                <div class="insight-item"><strong>付属品市場の存在:</strong> 空箱やダストバッグだけで350件、平均$159で取引</div>
+            </div>
+
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <div class="chart-title">📊 カテゴリ別販売数</div>
+                    <div class="chart-container" id="chart-category-count"></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">💰 カテゴリ別売上構成</div>
+                    <div class="chart-container" id="chart-category-sales"></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">💵 価格帯分布</div>
+                    <div class="chart-container" id="chart-price-dist"></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">🎨 素材分布</div>
+                    <div class="chart-container" id="chart-material"></div>
+                </div>
+            </div>
+
+            <!-- Category Summary Table -->
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>カテゴリ別サマリー</h3>
+                </div>
+                <table id="table-category">
+                    <thead>
+                        <tr>
+                            <th>カテゴリ</th>
+                            <th>件数</th>
+                            <th>総売上</th>
+                            <th>平均価格</th>
+                            <th>中央値</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Scarf Tab -->
+        <div id="scarf" class="tab-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">🧣</div>
+                    <div class="stat-value">5,430</div>
+                    <div class="stat-label">スカーフ販売数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-value">$925,813</div>
+                    <div class="stat-label">総売上</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-value">$113.5</div>
+                    <div class="stat-label">中央値</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🎨</div>
+                    <div class="stat-value">22</div>
+                    <div class="stat-label">識別柄数</div>
+                </div>
+            </div>
+
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <div class="chart-title">📏 サイズ別販売数</div>
+                    <div class="chart-container" id="chart-scarf-size"></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">🎨 柄別販売数（Top15）</div>
+                    <div class="chart-container" id="chart-scarf-pattern"></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">💵 サイズ別価格比較</div>
+                    <div class="chart-container" id="chart-scarf-price"></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">🔥 サイズ×柄 ヒートマップ</div>
+                    <div class="chart-container" id="chart-scarf-heatmap"></div>
+                </div>
+            </div>
+
+            <!-- Scarf Pattern Table -->
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>柄別詳細</h3>
+                    <input type="text" class="search-box" placeholder="柄名で検索..." onkeyup="filterTable('table-scarf-pattern', this.value)">
+                </div>
+                <table id="table-scarf-pattern">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable('table-scarf-pattern', 0)">柄名</th>
+                            <th onclick="sortTable('table-scarf-pattern', 1)">件数</th>
+                            <th onclick="sortTable('table-scarf-pattern', 2)">平均価格</th>
+                            <th onclick="sortTable('table-scarf-pattern', 3)">中央値</th>
+                            <th>検索</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <!-- Animal Pattern Section -->
+            <div class="insights-card" style="margin-top: 25px;">
+                <div class="insights-title">🦁 アニマル柄分析（全451件 / スカーフ全体の7.9%）</div>
+                <div class="insight-item"><strong>馬柄が最多:</strong> 244件（54%）- エルメスの馬具ブランドとしての歴史を反映</div>
+                <div class="insight-item"><strong>高価格帯:</strong> レオパード$390、象$464、虎$307が高中央値</div>
+                <div class="insight-item"><strong>Jungle Love人気:</strong> ツイリーで特に人気（12件）、中央値$166</div>
+            </div>
+
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <div class="chart-title">🦁 アニマル柄別販売数</div>
+                    <div class="chart-container" id="chart-animal-pattern"></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">💵 アニマル柄別価格（中央値）</div>
+                    <div class="chart-container" id="chart-animal-price"></div>
+                </div>
+            </div>
+
+            <div class="chart-grid">
+                <div class="chart-card" style="grid-column: span 2;">
+                    <div class="chart-title">🔥 サイズ×アニマル柄 ヒートマップ</div>
+                    <div class="chart-container" id="chart-animal-heatmap" style="height: 450px;"></div>
+                </div>
+            </div>
+
+            <!-- Animal Pattern Table -->
+            <div class="table-container" style="margin-top: 15px;">
+                <div class="table-header">
+                    <h3>アニマル柄詳細</h3>
+                </div>
+                <table id="table-animal-pattern">
+                    <thead>
+                        <tr>
+                            <th>柄名</th>
+                            <th>件数</th>
+                            <th>平均価格</th>
+                            <th>中央値</th>
+                            <th>検索</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Bag Tab -->
+        <div id="bag" class="tab-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">👜</div>
+                    <div class="stat-value">918</div>
+                    <div class="stat-label">バッグ販売数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-value">$824,341</div>
+                    <div class="stat-label">総売上</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-value">$898</div>
+                    <div class="stat-label">平均価格</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">👑</div>
+                    <div class="stat-value">$7,722</div>
+                    <div class="stat-label">バーキン中央値</div>
+                </div>
+            </div>
+
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <div class="chart-title">📊 モデル別販売数</div>
+                    <div class="chart-container" id="chart-bag-model"></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">💵 モデル別価格（中央値）</div>
+                    <div class="chart-container" id="chart-bag-price"></div>
+                </div>
+            </div>
+
+            <!-- Bag Model Table -->
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>モデル別詳細</h3>
+                </div>
+                <table id="table-bag-model">
+                    <thead>
+                        <tr>
+                            <th>モデル</th>
+                            <th>件数</th>
+                            <th>平均価格</th>
+                            <th>中央値</th>
+                            <th>最低価格</th>
+                            <th>最高価格</th>
+                            <th>検索</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Accessory Tab -->
+        <div id="accessory" class="tab-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">💍</div>
+                    <div class="stat-value">1,149</div>
+                    <div class="stat-label">アクセサリー販売数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-value">$289,487</div>
+                    <div class="stat-label">総売上</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-value">$171</div>
+                    <div class="stat-label">中央値</div>
+                </div>
+            </div>
+
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <div class="chart-title">📊 種類別販売数</div>
+                    <div class="chart-container" id="chart-accessory-type"></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">💵 種類別価格（中央値）</div>
+                    <div class="chart-container" id="chart-accessory-price"></div>
+                </div>
+            </div>
+
+            <!-- 細分化セクション -->
+            <div class="insights-card" style="margin-bottom: 25px;">
+                <div class="insights-title">💎 アクセサリー詳細分析（1,498件 → 41タイプに細分化）</div>
+                <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 15px;">
+                    バングル（10種）、スカーフリング（7種）、カデナ/チャーム（5種）、ベルト（5種）、ネックレス（5種）など詳細分類
+                </p>
+            </div>
+
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <div class="chart-title">📊 アイテムタイプ別販売数（上位20）</div>
+                    <div class="chart-container" id="chart-accessory-detail-type" style="height: 500px;"></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">🎨 素材別分布</div>
+                    <div class="chart-container" id="chart-accessory-material"></div>
+                </div>
+            </div>
+
+            <div class="chart-grid">
+                <div class="chart-card" style="grid-column: 1 / -1;">
+                    <div class="chart-title">🔥 タイプ × 素材 ヒートマップ（件数）</div>
+                    <div class="chart-container" id="chart-accessory-heatmap" style="height: 550px;"></div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>アイテムタイプ詳細（41タイプ）</h3>
+                    <input type="text" id="search-accessory-type" class="search-input" placeholder="タイプ名で検索...">
+                </div>
+                <table id="table-accessory-detail">
+                    <thead>
+                        <tr>
+                            <th>タイプ</th>
+                            <th>件数</th>
+                            <th>平均価格</th>
+                            <th>中央値</th>
+                            <th>最低</th>
+                            <th>最高</th>
+                            <th>検索</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div class="table-container" style="margin-top: 25px;">
+                <div class="table-header">
+                    <h3>タイプ × 素材 組み合わせ（件数3以上）</h3>
+                </div>
+                <table id="table-accessory-cross">
+                    <thead>
+                        <tr>
+                            <th>タイプ</th>
+                            <th>素材</th>
+                            <th>件数</th>
+                            <th>中央値</th>
+                            <th>検索</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div class="table-container" style="margin-top: 25px;">
+                <div class="table-header">
+                    <h3>汎用カテゴリ別（従来分類）</h3>
+                </div>
+                <table id="table-accessory">
+                    <thead>
+                        <tr>
+                            <th>種類</th>
+                            <th>件数</th>
+                            <th>平均価格</th>
+                            <th>中央値</th>
+                            <th>検索</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <!-- Bangle Detail -->
+            <div class="chart-grid" style="margin-top: 25px;">
+                <div class="chart-card">
+                    <div class="chart-title">💎 バングル素材別分布</div>
+                    <div class="chart-container" id="chart-bangle-material"></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">🔗 スカーフリング モデル別</div>
+                    <div class="chart-container" id="chart-scarf-ring-model"></div>
+                </div>
+            </div>
+
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <div class="chart-title">👔 ネクタイ柄別分布</div>
+                    <div class="chart-container" id="chart-tie-pattern"></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">💵 ネクタイ柄別価格</div>
+                    <div class="chart-container" id="chart-tie-price"></div>
+                </div>
+            </div>
+
+            <!-- Bangle Table -->
+            <div class="table-container" style="margin-top: 25px;">
+                <div class="table-header">
+                    <h3>バングル素材別詳細</h3>
+                </div>
+                <table id="table-bangle-material">
+                    <thead>
+                        <tr>
+                            <th>素材</th>
+                            <th>件数</th>
+                            <th>平均価格</th>
+                            <th>中央値</th>
+                            <th>検索</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <!-- Scarf Ring Table -->
+            <div class="table-container" style="margin-top: 15px;">
+                <div class="table-header">
+                    <h3>スカーフリング モデル別詳細</h3>
+                </div>
+                <table id="table-scarf-ring">
+                    <thead>
+                        <tr>
+                            <th>モデル</th>
+                            <th>件数</th>
+                            <th>平均価格</th>
+                            <th>中央値</th>
+                            <th>検索</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <!-- Tie Table -->
+            <div class="table-container" style="margin-top: 15px;">
+                <div class="table-header">
+                    <h3>ネクタイ柄別詳細</h3>
+                </div>
+                <table id="table-tie-pattern">
+                    <thead>
+                        <tr>
+                            <th>柄/モチーフ</th>
+                            <th>件数</th>
+                            <th>平均価格</th>
+                            <th>中央値</th>
+                            <th>検索</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Leather Goods Tab -->
+        <div id="leather" class="tab-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">💼</div>
+                    <div class="stat-value">777</div>
+                    <div class="stat-label">財布・革小物販売数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-value">$113,232</div>
+                    <div class="stat-label">総売上</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-value">$100</div>
+                    <div class="stat-label">中央値</div>
+                </div>
+            </div>
+
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <div class="chart-title">📊 種類別販売数</div>
+                    <div class="chart-container" id="chart-leather-type"></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">💵 種類別価格（中央値）</div>
+                    <div class="chart-container" id="chart-leather-price"></div>
+                </div>
+            </div>
+
+            <!-- 細分化セクション -->
+            <div class="insights-card" style="margin-bottom: 25px;">
+                <div class="insights-title">👜 主要モデル別分析（645件）</div>
+                <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 15px;">
+                    Bearn、Dogon、Azapなどのモデル別に販売データを分析。Kelly WalletやConstance Walletは高価格帯。
+                </p>
+            </div>
+
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <div class="chart-title">📊 モデル別販売数</div>
+                    <div class="chart-container" id="chart-wallet-model"></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">💵 モデル別価格（中央値）</div>
+                    <div class="chart-container" id="chart-wallet-model-price"></div>
+                </div>
+            </div>
+
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <div class="chart-title">🎨 素材別販売数</div>
+                    <div class="chart-container" id="chart-wallet-material"></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">🌈 色別販売数</div>
+                    <div class="chart-container" id="chart-wallet-color"></div>
+                </div>
+            </div>
+
+            <div class="chart-grid">
+                <div class="chart-card" style="grid-column: 1 / -1;">
+                    <div class="chart-title">🔥 モデル × 素材 ヒートマップ（件数）</div>
+                    <div class="chart-container" id="chart-wallet-heatmap" style="height: 500px;"></div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>主要モデル詳細（件数順）</h3>
+                    <input type="text" id="search-wallet-model" class="search-input" placeholder="モデル名で検索...">
+                </div>
+                <table id="table-wallet-model">
+                    <thead>
+                        <tr>
+                            <th>モデル</th>
+                            <th>件数</th>
+                            <th>平均価格</th>
+                            <th>中央値</th>
+                            <th>最低</th>
+                            <th>最高</th>
+                            <th>主要素材</th>
+                            <th>検索</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div class="table-container" style="margin-top: 25px;">
+                <div class="table-header">
+                    <h3>モデル × 素材 組み合わせ（件数3以上）</h3>
+                </div>
+                <table id="table-wallet-cross">
+                    <thead>
+                        <tr>
+                            <th>モデル</th>
+                            <th>素材</th>
+                            <th>件数</th>
+                            <th>中央値</th>
+                            <th>検索</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div class="table-container" style="margin-top: 25px;">
+                <div class="table-header">
+                    <h3>アイテムタイプ別（汎用分類）</h3>
+                </div>
+                <table id="table-leather">
+                    <thead>
+                        <tr>
+                            <th>種類</th>
+                            <th>件数</th>
+                            <th>平均価格</th>
+                            <th>中央値</th>
+                            <th>検索</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Parts Tab -->
+        <div id="parts" class="tab-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📦</div>
+                    <div class="stat-value">350</div>
+                    <div class="stat-label">付属品販売数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-value">$55,685</div>
+                    <div class="stat-label">総売上</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-value">$105</div>
+                    <div class="stat-label">中央値</div>
+                </div>
+            </div>
+
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <div class="chart-title">📊 種類別販売数</div>
+                    <div class="chart-container" id="chart-parts-type"></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">💵 種類別価格（中央値）</div>
+                    <div class="chart-container" id="chart-parts-price"></div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>付属品種類別詳細</h3>
+                </div>
+                <table id="table-parts">
+                    <thead>
+                        <tr>
+                            <th>種類</th>
+                            <th>件数</th>
+                            <th>平均価格</th>
+                            <th>中央値</th>
+                            <th>検索</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Other Tab -->
+        <div id="other" class="tab-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📌</div>
+                    <div class="stat-value">756</div>
+                    <div class="stat-label">その他販売数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📂</div>
+                    <div class="stat-value">54</div>
+                    <div class="stat-label">細分化カテゴリ数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-value">$225</div>
+                    <div class="stat-label">中央値</div>
+                </div>
+            </div>
+
+            <div class="insights-card">
+                <div class="insights-title">📝 「その他」カテゴリ 54種類に細分化</div>
+                <div class="insight-item"><strong>エルメス雑貨（323件）:</strong> アクセサリー漏れ161件、バッグ漏れ105件、スカーフ漏れ22件、ストラップ9件など</div>
+                <div class="insight-item"><strong>ホーム（62件）:</strong> ビーチタオル15件、ハンドタオル17件、グラス9件、フレーム10件など</div>
+                <div class="insight-item"><strong>衣類（61件）:</strong> ニット30件、ジャケット10件、シャツ11件、スーツ4件（中央値$2,797）など</div>
+                <div class="insight-item"><strong>靴（57件）:</strong> サンダル18件（$518）、スニーカー15件（$325）、ローファー6件など</div>
+                <div class="insight-item"><strong>ファッション小物（30件）:</strong> 帽子14件、手袋11件、ベビー用品4件</div>
+                <div class="insight-item"><strong>時計（30件）:</strong> Clipper、H08などの腕時計（中央値$501）</div>
+                <div class="insight-item"><strong>ステーショナリー・ゲーム（31件）:</strong> トランプ28件（$118）、フリスビー2件</div>
+            </div>
+
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <div class="chart-title">📊 大カテゴリ別分布</div>
+                    <div class="chart-container" id="chart-other-major"></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">📈 詳細カテゴリ別（上位20）</div>
+                    <div class="chart-container" id="chart-other-detail"></div>
+                </div>
+            </div>
+
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <div class="chart-title">💵 詳細カテゴリ別価格（中央値・上位15）</div>
+                    <div class="chart-container" id="chart-other-price"></div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-title">🔥 大カテゴリ×価格帯ヒートマップ</div>
+                    <div class="chart-container" id="chart-other-heatmap"></div>
+                </div>
+            </div>
+
+            <!-- Other Detail Table -->
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>「その他」詳細カテゴリ一覧（54種類）</h3>
+                    <input type="text" id="search-other-category" placeholder="🔍 カテゴリ検索..." style="padding: 8px 12px; border-radius: 5px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text); width: 200px;">
+                </div>
+                <table id="table-other-detail">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable('table-other-detail', 0)">カテゴリ ▼</th>
+                            <th onclick="sortTable('table-other-detail', 1)">件数 ▼</th>
+                            <th onclick="sortTable('table-other-detail', 2)">中央値($) ▼</th>
+                            <th onclick="sortTable('table-other-detail', 3)">平均($) ▼</th>
+                            <th onclick="sortTable('table-other-detail', 4)">最高値($) ▼</th>
+                            <th>メルカリ検索</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <!-- Other Cross Table -->
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>大カテゴリ×詳細サブカテゴリ</h3>
+                </div>
+                <table id="table-other-cross">
+                    <thead>
+                        <tr>
+                            <th>大カテゴリ</th>
+                            <th>サブカテゴリ</th>
+                            <th>件数</th>
+                            <th>中央値($)</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Generated at: 2026-01-23 | Data Source: eBay Terapeak | Total Records: 9,735</p>
+            <p>🤖 Generated with Claude Code</p>
+        </div>
+    </div>
+
+    <script>
+        // ===== DATA =====
+        const analysisData = {
+            "category_distribution": {
+                "スカーフ": {"count": 5430, "total_sales": 925813.38, "avg_price": 170.50, "median_price": 113.50, "icon": "🧣"},
+                "アクセサリー": {"count": 1149, "total_sales": 289486.56, "avg_price": 251.95, "median_price": 171.00, "icon": "💍"},
+                "バッグ": {"count": 918, "total_sales": 824341.40, "avg_price": 897.98, "median_price": 122.50, "icon": "👜"},
+                "財布・革小物": {"count": 777, "total_sales": 113232.40, "avg_price": 145.73, "median_price": 100.00, "icon": "💼"},
+                "その他": {"count": 756, "total_sales": 416620.21, "avg_price": 551.08, "median_price": 224.98, "icon": "📌"},
+                "付属品": {"count": 350, "total_sales": 55685.29, "avg_price": 159.10, "median_price": 105.17, "icon": "📦"},
+                "時計": {"count": 169, "total_sales": 75654.93, "avg_price": 447.66, "median_price": 373.00, "icon": "⌚"},
+                "ホーム・食器": {"count": 149, "total_sales": 38742.95, "avg_price": 260.02, "median_price": 197.25, "icon": "🍽️"},
+                "香水": {"count": 37, "total_sales": 4828.96, "avg_price": 130.51, "median_price": 129.20, "icon": "🌸"}
+            },
+            "scarf_analysis": {
+                "by_size": {
+                    "カレ90": {"count": 2886, "avg_price": 177.06, "median_price": 128.50},
+                    "不明": {"count": 1608, "avg_price": 128.66, "median_price": 85.00},
+                    "ツイリー": {"count": 439, "avg_price": 152.67, "median_price": 137.50},
+                    "カレ45": {"count": 224, "avg_price": 210.10, "median_price": 178.08},
+                    "プリッセ": {"count": 125, "avg_price": 174.48, "median_price": 145.00},
+                    "カレ70": {"count": 86, "avg_price": 306.57, "median_price": 315.75},
+                    "ストール": {"count": 62, "avg_price": 736.66, "median_price": 700.00}
+                },
+                "by_pattern": {
+                    "不明/その他": {"count": 4680, "avg_price": 173.17, "median_price": 119.00},
+                    "Brides de Gala": {"count": 183, "avg_price": 118.60, "median_price": 76.00},
+                    "Eperon d'Or": {"count": 76, "avg_price": 130.11, "median_price": 100.00},
+                    "Les Clés": {"count": 75, "avg_price": 101.21, "median_price": 96.00},
+                    "Promenade de Longchamps": {"count": 46, "avg_price": 92.25, "median_price": 82.00},
+                    "Les Voitures": {"count": 46, "avg_price": 100.42, "median_price": 68.00},
+                    "Le Flacon": {"count": 41, "avg_price": 109.34, "median_price": 112.50},
+                    "Bolduc": {"count": 32, "avg_price": 210.60, "median_price": 137.50},
+                    "Les Rubans du Cheval": {"count": 32, "avg_price": 95.12, "median_price": 99.00},
+                    "Faubourg": {"count": 29, "avg_price": 440.14, "median_price": 458.00},
+                    "Ex-Libris": {"count": 26, "avg_price": 218.33, "median_price": 106.00},
+                    "Les Tambours": {"count": 26, "avg_price": 105.10, "median_price": 101.25},
+                    "Les Cavaliers d'Or": {"count": 25, "avg_price": 99.27, "median_price": 92.00},
+                    "Jungle Love": {"count": 20, "avg_price": 321.58, "median_price": 238.80},
+                    "Chasse en Inde": {"count": 20, "avg_price": 197.78, "median_price": 180.93},
+                    "Le Mors": {"count": 17, "avg_price": 94.42, "median_price": 87.00},
+                    "Kachinas": {"count": 17, "avg_price": 469.78, "median_price": 468.35},
+                    "Les Becanes": {"count": 15, "avg_price": 91.81, "median_price": 67.00},
+                    "Les Jardins": {"count": 10, "avg_price": 490.10, "median_price": 445.00}
+                }
+            },
+            "bag_analysis": {
+                "by_model": {
+                    "その他": {"count": 332, "avg_price": 396.06, "median_price": 176.25, "min_price": 12.50, "max_price": 4044.00},
+                    "フールトゥ": {"count": 223, "avg_price": 80.91, "median_price": 76.86, "min_price": 11.50, "max_price": 248.00},
+                    "ボリード": {"count": 134, "avg_price": 332.69, "median_price": 70.06, "min_price": 6.50, "max_price": 9240.00},
+                    "ケリー": {"count": 76, "avg_price": 2663.19, "median_price": 415.50, "min_price": 74.99, "max_price": 21958.78},
+                    "バーキン": {"count": 36, "avg_price": 6834.60, "median_price": 7721.93, "min_price": 48.44, "max_price": 16980.00},
+                    "コンスタンス": {"count": 35, "avg_price": 526.73, "median_price": 168.00, "min_price": 32.00, "max_price": 9653.18},
+                    "ガーデンパーティ": {"count": 25, "avg_price": 987.79, "median_price": 821.22, "min_price": 107.50, "max_price": 3200.00},
+                    "エヴリン": {"count": 17, "avg_price": 1292.13, "median_price": 1425.00, "min_price": 122.50, "max_price": 2810.00},
+                    "ピコタン": {"count": 15, "avg_price": 2592.96, "median_price": 2390.00, "min_price": 1198.00, "max_price": 4970.00},
+                    "エルバッグ": {"count": 13, "avg_price": 990.25, "median_price": 738.00, "min_price": 500.00, "max_price": 2940.00},
+                    "リンディ": {"count": 8, "avg_price": 6095.46, "median_price": 3615.29, "min_price": 2900.00, "max_price": 12480.00},
+                    "ジプシエール": {"count": 3, "avg_price": 3497.09, "median_price": 3485.30, "min_price": 3300.00, "max_price": 3705.97},
+                    "ハルザン": {"count": 1, "avg_price": 5660.00, "median_price": 5660.00, "min_price": 5660.00, "max_price": 5660.00}
+                }
+            },
+            "leather_goods_analysis": {
+                "手帳/アジェンダ": {"count": 203, "avg_price": 102.76, "median_price": 80.51},
+                "二つ折り財布": {"count": 174, "avg_price": 161.71, "median_price": 141.00},
+                "コインケース": {"count": 98, "avg_price": 74.73, "median_price": 66.56},
+                "ポーチ": {"count": 72, "avg_price": 162.31, "median_price": 102.50},
+                "カードケース": {"count": 69, "avg_price": 150.00, "median_price": 89.00},
+                "キーケース": {"count": 65, "avg_price": 146.48, "median_price": 100.00},
+                "長財布": {"count": 60, "avg_price": 225.29, "median_price": 158.09},
+                "財布（その他）": {"count": 27, "avg_price": 356.06, "median_price": 220.50},
+                "その他": {"count": 6, "avg_price": 157.16, "median_price": 139.97},
+                "ペンケース": {"count": 3, "avg_price": 426.55, "median_price": 128.66}
+            },
+            "accessory_analysis": {
+                "バングル/ブレスレット": {"count": 324, "avg_price": 239.73, "median_price": 195.25},
+                "スカーフリング": {"count": 314, "avg_price": 147.95, "median_price": 135.99},
+                "カデナ/チャーム": {"count": 187, "avg_price": 390.77, "median_price": 242.00},
+                "ベルト": {"count": 80, "avg_price": 268.48, "median_price": 179.80},
+                "イヤリング/ピアス": {"count": 78, "avg_price": 438.72, "median_price": 213.25},
+                "ネクタイ": {"count": 67, "avg_price": 99.19, "median_price": 67.64},
+                "ネックレス": {"count": 65, "avg_price": 375.92, "median_price": 189.00},
+                "ブローチ": {"count": 24, "avg_price": 197.23, "median_price": 157.00},
+                "グローブホルダー": {"count": 10, "avg_price": 77.20, "median_price": 53.00}
+            },
+            "parts_analysis": {
+                "空箱": {"count": 142, "avg_price": 230.76, "median_price": 233.38},
+                "ダストバッグ": {"count": 100, "avg_price": 139.15, "median_price": 98.49},
+                "ノッティングカード": {"count": 48, "avg_price": 54.39, "median_price": 39.91},
+                "レインカバー": {"count": 23, "avg_price": 50.30, "median_price": 46.13},
+                "リボン": {"count": 22, "avg_price": 196.66, "median_price": 141.75},
+                "ガーメントバッグ": {"count": 11, "avg_price": 75.85, "median_price": 55.72},
+                "ステッカー": {"count": 4, "avg_price": 18.53, "median_price": 20.38}
+            },
+            "price_distribution": {
+                "~$50": 861,
+                "$50-100": 2923,
+                "$100-200": 3089,
+                "$200-500": 2059,
+                "$500-1000": 468,
+                "$1000-2000": 189,
+                "$2000-5000": 89,
+                "$5000-10000": 38,
+                "$10000+": 19
+            },
+            "material_distribution": {
+                "シルク": 5189,
+                "不明": 1916,
+                "レザー": 1158,
+                "キャンバス": 550,
+                "ゴールド": 355,
+                "シルバー": 210,
+                "エナメル": 149,
+                "磁器": 80,
+                "その他": 128
+            },
+            "other_detail": {
+                "その他（不明）": {"count": 315, "avg_price": 636.14, "median_price": 238.00, "sample_items": [
+                    {"title": "HERMES Constance3 Miroir Size Mini Swift Leather Rose Sakura", "price": 14720.00},
+                    {"title": "HERMES HAUT A COURROIES Size 40 Togo Leather/Toile Military Blue Nuit", "price": 11660.00},
+                    {"title": "HERMES Rolling Mobility Suitcase Taurillon/Toile Gold/Multicolor", "price": 7410.00},
+                    {"title": "HERMES Della Cavalleria Elan Epsom Black", "price": 7070.00},
+                    {"title": "HERMES Della Cavalleria Elan Epsom Ardoise", "price": 6810.00}
+                ]},
+                "バッグ（未分類）": {"count": 124, "avg_price": 742.02, "median_price": 220.50, "sample_items": [
+                    {"title": "HERMES Kelly Ad GM Backpack Box Calf Blue Nuit Gold Hardware", "price": 8296.90},
+                    {"title": "HERMES Kelly 28 No Stamp Black Box Calf Women's Handbag", "price": 7377.29},
+                    {"title": "HERMES Kelly 28 Box Calf Handbag Black Circle M (1983)", "price": 6700.00},
+                    {"title": "HERMES Constance 23 Shoulder Bag Box carf Women", "price": 5400.00},
+                    {"title": "Hermes/Flash/Sailor/Sling bag/Backpack/Leather/Black", "price": 3998.00}
+                ]},
+                "スカーフ（未分類）": {"count": 101, "avg_price": 143.01, "median_price": 81.20, "sample_items": [
+                    {"title": "Hermes Twilly Silk Scarf Criquetis Finesse Lamb Leather Fringe Beads Embroidery", "price": 1551.36},
+                    {"title": "HERMES Carree80 scarf Bord a Bord 25 Spring/Summer New Arrivals blue cotton", "price": 510.00},
+                    {"title": "Unused w/box HERMES Carre 90 H EN VOYAGE Cashmere Silk Fringe Scarf 90cm Rare", "price": 480.00},
+                    {"title": "Hermes Carre90Brid Et D'Estance Calf Blanc/Marine/Multisilk", "price": 475.55},
+                    {"title": "HERMES scarf Carres 90 Quai aux fleurs flowering riverside avenue", "price": 451.97}
+                ]},
+                "靴": {"count": 55, "avg_price": 425.11, "median_price": 327.25, "sample_items": [
+                    {"title": "HERMES Faustin short boots Size 35 Calf Leather Beige", "price": 1360.00},
+                    {"title": "HERMES Saint Germain ankle boots Size 39 1/2 Calf Leather Black", "price": 1170.00},
+                    {"title": "HERMES Sandals《Glamour》 Size 37 Leather Black", "price": 980.00},
+                    {"title": "HERMES Ballet shoes \"Jane\" Size 38 Velour/Fabric/Satin Black", "price": 960.00},
+                    {"title": "Men 8.5US Hermes Sneakers 42", "price": 943.15}
+                ]},
+                "衣類": {"count": 50, "avg_price": 633.71, "median_price": 534.50, "sample_items": [
+                    {"title": "2024 SS HERMES Long Cardigan Long Sleeves Fannie Ice Cream#34 Vert Oyat", "price": 2532.00},
+                    {"title": "2024AW HERMES Women's Twill Laine Kaleidoscope Effect Cropped pajamas Pants", "price": 1635.00},
+                    {"title": "Hermes 1990s Leather Coat Size 44 Heavy Outerwear Very Good Condition", "price": 1490.00},
+                    {"title": "HERMES by Margiela period Single-Breasted Coat Beige Size 36/S Vintage", "price": 1402.74},
+                    {"title": "HERMES Shirt cardigan Size 38 Cashmere100% Navy", "price": 1210.00}
+                ]},
+                "タオル/リネン": {"count": 33, "avg_price": 364.45, "median_price": 319.50, "sample_items": [
+                    {"title": "HERMES Avalon Jump H Blanket Wool 90%/Cashmere10% Gray/Multicolor", "price": 910.00},
+                    {"title": "HERMES Avalon Other miscellaneous goods blanket Black / white wool/cashmere", "price": 884.00},
+                    {"title": "HERMES Grand Lala Blanket Wool 90%/Cashmere10% Brown", "price": 860.00},
+                    {"title": "HERMES Avalon Blanket Throw H Blanket Merino Wool Cashmere Orange Good Used", "price": 832.50},
+                    {"title": "Hermes Avalon Throw Blanket Vintage H Pattern 66.5x49.2 Yellow x Navy", "price": 720.00}
+                ]},
+                "トランプ/ゲーム": {"count": 28, "avg_price": 129.71, "median_price": 117.64, "sample_items": [
+                    {"title": "HERMES Authentic Deck of Playing Card Red Blue Years Gift Cards 2018 W/ Box RARE", "price": 261.79},
+                    {"title": "HERMES Playing Cards Game Set of 2 Rare Unused", "price": 201.00},
+                    {"title": "HERMES Playing Cards Etuicult GM Case Orange", "price": 199.99},
+                    {"title": "HERMES 2 Deck of Playing Cards Trump Game Authentic Cheval de Fete Horse Design", "price": 179.98},
+                    {"title": "HERMES Tarot Cards With Manual Authentic Deck of Playing Cards SUN Designed RARE", "price": 179.98}
+                ]},
+                "時計関連": {"count": 25, "avg_price": 604.31, "median_price": 499.00, "sample_items": [
+                    {"title": "HERMES Clipper Watches CP2.810 grayDial Stainless Steel Mechanical Automatic", "price": 1350.00},
+                    {"title": "Hermes Women's Clipper Diver Chronograph Cl2.320 Quartz", "price": 1316.32},
+                    {"title": "HERMES Cape Cod CC1.210 Watches", "price": 1316.00},
+                    {"title": "HERMES CP2.810 Clipper Date Automatic Stainless steel mens", "price": 1265.00},
+                    {"title": "HERMES Clipper Watches CL1.320 Chronograph cal.251.471 whiteDial", "price": 1000.00}
+                ]},
+                "帽子": {"count": 13, "avg_price": 243.10, "median_price": 181.80, "sample_items": [
+                    {"title": "Hermes Casquette Wool Cap Black 57cm 22.4in Luxury Hat Authentic Item", "price": 455.00},
+                    {"title": "HERMES Françoise Hat Brides de Gala Wool Size 57 Black Guarantee", "price": 400.00},
+                    {"title": "HERMES Cap Garate Serie Button Size 57 Raffia Navy", "price": 370.00},
+                    {"title": "HERMES Hat \"Harper\" Velvet Size 58 Cotton100% Chocolat", "price": 330.00},
+                    {"title": "Genuine HERMES straw hat straw hat newsboy cap Serie size 59 used", "price": 300.00}
+                ]},
+                "ジュエリー（高級）": {"count": 10, "avg_price": 1788.21, "median_price": 1356.00, "sample_items": [
+                    {"title": "HERMES Chaine d'Ancre Punk Ring Size 52/#12 18K Pink Gold", "price": 5560.00},
+                    {"title": "HERMES Ring 《Finesse》 Size 53/#13 18K White Gold", "price": 2820.00},
+                    {"title": "HERMES Ring 《Finesse》 Size 53/#13 18K Pink Gold", "price": 2736.00},
+                    {"title": "HERMES Chaine d'Ancre Anchene Ring Size PM/52/#12 18K Pink Gold", "price": 1530.00},
+                    {"title": "HERMES Ramsis Mini HH1.110 shell/diamond Ladies Watches quartz", "price": 1386.00}
+                ]},
+                "オブジェ/インテリア": {"count": 2, "avg_price": 1453.50, "median_price": 1453.50, "sample_items": [
+                    {"title": "HERMES Arion Object Mahogany Akaju Ebeneze", "price": 2710.00},
+                    {"title": "HERMES Clickazoo Object White Black CLICKAZOO Pigeon Chevre Swift Unisex", "price": 197.00}
+                ]}
+            },
+            "other_detail_analysis": {
+                "total_count": 756,
+                "category_count": 54,
+                "detail_categories": {
+                    "Accessory/アクセサリー（その他）": {"count": 161, "avg_price": 287.31, "median_price": 131.5, "max_price": 5560.0},
+                    "Unclassified/未分類": {"count": 127, "avg_price": 628.78, "median_price": 238.0, "max_price": 11660.0},
+                    "Bag/バッグ（その他）": {"count": 105, "avg_price": 1325.34, "median_price": 427.0, "max_price": 14720.0},
+                    "Knitwear/ニット": {"count": 30, "avg_price": 681.89, "median_price": 635.22, "max_price": 2532.0},
+                    "Watch/時計": {"count": 30, "avg_price": 748.86, "median_price": 500.6, "max_price": 4192.0},
+                    "Playing Cards/トランプ": {"count": 28, "avg_price": 129.71, "median_price": 117.64, "max_price": 261.79},
+                    "Scarf/スカーフ（その他）": {"count": 22, "avg_price": 305.87, "median_price": 237.94, "max_price": 1090.0},
+                    "Sandals/サンダル": {"count": 18, "avg_price": 506.51, "median_price": 517.5, "max_price": 980.0},
+                    "Hand Towel/ハンドタオル": {"count": 17, "avg_price": 81.03, "median_price": 65.17, "max_price": 180.0},
+                    "Beach Towel/ビーチタオル": {"count": 15, "avg_price": 403.43, "median_price": 398.0, "max_price": 703.08},
+                    "Sneakers/スニーカー": {"count": 15, "avg_price": 375.48, "median_price": 325.0, "max_price": 943.15},
+                    "Hat/帽子": {"count": 14, "avg_price": 247.6, "median_price": 225.9, "max_price": 455.0},
+                    "Shoes-Other/靴その他": {"count": 14, "avg_price": 167.12, "median_price": 100.5, "max_price": 686.0},
+                    "Wallet/革小物（その他）": {"count": 14, "avg_price": 226.27, "median_price": 247.0, "max_price": 360.0},
+                    "Shirt/Blouse/シャツ・ブラウス": {"count": 11, "avg_price": 512.97, "median_price": 450.0, "max_price": 1210.0},
+                    "Gloves/手袋": {"count": 11, "avg_price": 131.79, "median_price": 108.5, "max_price": 288.0},
+                    "Frame/フォトフレーム": {"count": 10, "avg_price": 136.04, "median_price": 107.12, "max_price": 295.0},
+                    "Jacket/Coat/ジャケット・コート": {"count": 10, "avg_price": 925.65, "median_price": 850.0, "max_price": 1490.0},
+                    "Glassware/グラス": {"count": 9, "avg_price": 265.92, "median_price": 238.75, "max_price": 530.0},
+                    "Strap/ストラップ": {"count": 9, "avg_price": 623.17, "median_price": 715.0, "max_price": 980.0},
+                    "Non-Hermes/除外対象": {"count": 8, "avg_price": 189.74, "median_price": 168.04, "max_price": 445.0},
+                    "Equestrian/馬具": {"count": 6, "avg_price": 384.58, "median_price": 336.92, "max_price": 690.0},
+                    "Loafers/ローファー": {"count": 6, "avg_price": 253.05, "median_price": 227.31, "max_price": 460.0},
+                    "Comb/コーム": {"count": 6, "avg_price": 147.41, "median_price": 124.24, "max_price": 290.0},
+                    "Bag Accessories/バッグ用品": {"count": 5, "avg_price": 78.2, "median_price": 65.0, "max_price": 135.0},
+                    "Baby/ベビー用品": {"count": 4, "avg_price": 316.0, "median_price": 294.0, "max_price": 508.0},
+                    "Suit/スーツ": {"count": 4, "avg_price": 2423.19, "median_price": 2797.5, "max_price": 3595.0},
+                    "Pants/Skirt/パンツ・スカート": {"count": 4, "avg_price": 315.17, "median_price": 254.68, "max_price": 575.0},
+                    "Mobile Battery/モバイルバッテリー": {"count": 3, "avg_price": 628.92, "median_price": 745.88, "max_price": 870.0},
+                    "Beauty Tools/ビューティーツール": {"count": 3, "avg_price": 134.67, "median_price": 126.5, "max_price": 165.0},
+                    "Petit h/プティアッシュ": {"count": 3, "avg_price": 348.33, "median_price": 270.0, "max_price": 625.0},
+                    "Object/オブジェ": {"count": 3, "avg_price": 322.86, "median_price": 248.57, "max_price": 510.0},
+                    "Wine Tools/ワインツール": {"count": 3, "avg_price": 553.33, "median_price": 580.0, "max_price": 680.0},
+                    "Tech Accessories/テックアクセ": {"count": 3, "avg_price": 95.32, "median_price": 99.96, "max_price": 126.0},
+                    "Invalid/無効データ": {"count": 2, "avg_price": 246.24, "median_price": 246.24, "max_price": 356.0}
+                },
+                "major_categories": {
+                    "Misc Hermes/エルメス雑貨": {"count": 323, "subcategories": ["アクセサリー漏れ", "バッグ漏れ", "スカーフ漏れ", "ストラップ", "馬具", "Petit h", "ワインツール"]},
+                    "Unclassified/未分類": {"count": 127, "subcategories": ["未分類"]},
+                    "Home/ホーム": {"count": 62, "subcategories": ["ビーチタオル", "ハンドタオル", "グラス", "フレーム", "オブジェ", "クッション"]},
+                    "Clothing/衣類": {"count": 61, "subcategories": ["ニット", "シャツ", "ジャケット", "スーツ", "パンツ・スカート"]},
+                    "Shoes/靴": {"count": 57, "subcategories": ["サンダル", "スニーカー", "ローファー", "ブーツ", "ヒール"]},
+                    "Stationery & Games/ステーショナリー": {"count": 31, "subcategories": ["トランプ", "フリスビー"]},
+                    "Watch/時計": {"count": 30, "subcategories": ["腕時計", "時計バンド"]},
+                    "Fashion Accessories/ファッション小物": {"count": 30, "subcategories": ["帽子", "手袋", "ベビー"]},
+                    "Beauty/ビューティー": {"count": 11, "subcategories": ["コーム", "ビューティーツール"]},
+                    "Packaging/パッケージング": {"count": 8, "subcategories": ["バッグ用品", "保存袋"]},
+                    "Tech/テック": {"count": 6, "subcategories": ["モバイルバッテリー", "テックアクセ"]}
+                }
+            },
+            "bangle_by_material": {
+                "エナメル": {"count": 117, "avg_price": 221.07, "median_price": 212.49},
+                "レザー": {"count": 105, "avg_price": 166.00, "median_price": 162.40},
+                "不明": {"count": 55, "avg_price": 286.09, "median_price": 250.00},
+                "ゴールド": {"count": 24, "avg_price": 405.95, "median_price": 289.50},
+                "シルバー": {"count": 20, "avg_price": 417.06, "median_price": 214.75},
+                "ゴールドプレート": {"count": 6, "avg_price": 233.84, "median_price": 210.00}
+            },
+            "scarf_ring_by_model": {
+                "不明/その他": {"count": 107, "avg_price": 160.66, "median_price": 142.99},
+                "Chain/Chaine": {"count": 81, "avg_price": 150.57, "median_price": 137.50},
+                "Jumbo": {"count": 37, "avg_price": 131.13, "median_price": 123.01},
+                "Kelly": {"count": 36, "avg_price": 128.40, "median_price": 130.00},
+                "Belt": {"count": 31, "avg_price": 133.74, "median_price": 127.90},
+                "Cosmos": {"count": 19, "avg_price": 155.99, "median_price": 168.00},
+                "Bolduc": {"count": 3, "avg_price": 161.16, "median_price": 177.00}
+            },
+            "tie_by_pattern": {
+                "不明/その他": {"count": 25, "avg_price": 128.97, "median_price": 77.28},
+                "Animal/動物": {"count": 11, "avg_price": 91.82, "median_price": 54.65},
+                "H Logo": {"count": 8, "avg_price": 131.13, "median_price": 115.39},
+                "Horse/馬": {"count": 6, "avg_price": 65.63, "median_price": 63.00},
+                "Geometric/幾何学": {"count": 5, "avg_price": 49.00, "median_price": 48.00},
+                "Chain/鎖": {"count": 2, "avg_price": 60.24, "median_price": 60.24},
+                "Rope/Belt": {"count": 1, "avg_price": 49.98, "median_price": 49.98},
+                "Floral/花": {"count": 1, "avg_price": 50.00, "median_price": 50.00}
+            },
+            "animal_pattern_analysis": {
+                "Horse/馬": {"count": 244, "avg_price": 192.03, "median_price": 137.00},
+                "Chasse en Inde": {"count": 42, "avg_price": 151.46, "median_price": 141.24},
+                "Cat/猫": {"count": 25, "avg_price": 196.23, "median_price": 99.99},
+                "Jungle Love": {"count": 20, "avg_price": 321.58, "median_price": 238.80},
+                "Bird/鳥": {"count": 18, "avg_price": 237.01, "median_price": 199.50},
+                "Dog/犬": {"count": 17, "avg_price": 427.49, "median_price": 250.00},
+                "Les Leopards": {"count": 17, "avg_price": 447.05, "median_price": 390.00},
+                "Tiger/虎": {"count": 13, "avg_price": 378.37, "median_price": 307.00},
+                "Zebra/Zèbre": {"count": 12, "avg_price": 255.36, "median_price": 179.50},
+                "Elephant/象": {"count": 11, "avg_price": 381.13, "median_price": 463.60},
+                "Fish/魚": {"count": 9, "avg_price": 274.32, "median_price": 288.00},
+                "Wildlife": {"count": 8, "avg_price": 304.88, "median_price": 278.25},
+                "Butterfly/蝶": {"count": 6, "avg_price": 273.96, "median_price": 234.30},
+                "Faune et Flore": {"count": 6, "avg_price": 421.67, "median_price": 374.75},
+                "Lion": {"count": 3, "avg_price": 179.87, "median_price": 188.10}
+            },
+            "size_animal_cross": [
+                {"size": "カレ90", "pattern": "Horse/馬", "count": 135, "median_price": 128.50},
+                {"size": "不明", "pattern": "Horse/馬", "count": 66, "median_price": 121.25},
+                {"size": "カレ90", "pattern": "Chasse en Inde", "count": 26, "median_price": 166.69},
+                {"size": "ツイリー", "pattern": "Horse/馬", "count": 18, "median_price": 121.00},
+                {"size": "カレ45", "pattern": "Horse/馬", "count": 16, "median_price": 228.00},
+                {"size": "カレ90", "pattern": "Cat/猫", "count": 14, "median_price": 110.35},
+                {"size": "不明", "pattern": "Chasse en Inde", "count": 14, "median_price": 96.78},
+                {"size": "ツイリー", "pattern": "Jungle Love", "count": 12, "median_price": 165.95},
+                {"size": "カレ90", "pattern": "Elephant/象", "count": 10, "median_price": 464.30},
+                {"size": "ツイリー", "pattern": "Dog/犬", "count": 10, "median_price": 196.15},
+                {"size": "不明", "pattern": "Cat/猫", "count": 10, "median_price": 71.00},
+                {"size": "カレ90", "pattern": "Bird/鳥", "count": 10, "median_price": 201.25},
+                {"size": "ツイリー", "pattern": "Les Leopards", "count": 8, "median_price": 155.00},
+                {"size": "カレ90", "pattern": "Tiger/虎", "count": 7, "median_price": 294.00},
+                {"size": "カレ90", "pattern": "Wildlife", "count": 7, "median_price": 344.00},
+                {"size": "不明", "pattern": "Bird/鳥", "count": 7, "median_price": 198.99},
+                {"size": "カレ90", "pattern": "Fish/魚", "count": 6, "median_price": 305.62},
+                {"size": "不明", "pattern": "Zebra/Zèbre", "count": 6, "median_price": 199.75},
+                {"size": "カレ90", "pattern": "Dog/犬", "count": 5, "median_price": 498.00},
+                {"size": "カレ90", "pattern": "Faune et Flore", "count": 5, "median_price": 412.00},
+                {"size": "カレ70", "pattern": "Horse/馬", "count": 5, "median_price": 244.50},
+                {"size": "ストール", "pattern": "Horse/馬", "count": 4, "median_price": 939.65},
+                {"size": "ツイリー", "pattern": "Zebra/Zèbre", "count": 4, "median_price": 143.07},
+                {"size": "ストール", "pattern": "Les Leopards", "count": 3, "median_price": 1244.00},
+                {"size": "カレ90", "pattern": "Jungle Love", "count": 3, "median_price": 410.00},
+                {"size": "カレ90", "pattern": "Les Leopards", "count": 3, "median_price": 670.00},
+                {"size": "ツイリー", "pattern": "Butterfly/蝶", "count": 3, "median_price": 165.12},
+                {"size": "不明", "pattern": "Tiger/虎", "count": 3, "median_price": 298.00}
+            ],
+            "size_pattern_cross": [
+                {"size": "カレ90", "pattern": "Brides de Gala", "count": 119, "median_price": 76.00},
+                {"size": "カレ90", "pattern": "Les Clés", "count": 56, "median_price": 94.20},
+                {"size": "カレ90", "pattern": "Eperon d'Or", "count": 54, "median_price": 89.28},
+                {"size": "不明", "pattern": "Brides de Gala", "count": 40, "median_price": 64.50},
+                {"size": "カレ90", "pattern": "Promenade de Longchamps", "count": 36, "median_price": 90.50},
+                {"size": "カレ90", "pattern": "Le Flacon", "count": 31, "median_price": 121.50},
+                {"size": "カレ90", "pattern": "Les Voitures", "count": 29, "median_price": 72.00},
+                {"size": "カレ90", "pattern": "Les Tambours", "count": 23, "median_price": 103.50},
+                {"size": "カレ90", "pattern": "Les Rubans du Cheval", "count": 22, "median_price": 99.00},
+                {"size": "カレ90", "pattern": "Les Cavaliers d'Or", "count": 20, "median_price": 93.00},
+                {"size": "ツイリー", "pattern": "Brides de Gala", "count": 14, "median_price": 137.25},
+                {"size": "カレ90", "pattern": "Faubourg", "count": 14, "median_price": 495.00},
+                {"size": "カレ90", "pattern": "Chasse en Inde", "count": 13, "median_price": 198.00},
+                {"size": "カレ90", "pattern": "Kachinas", "count": 13, "median_price": 471.60},
+                {"size": "カレ90", "pattern": "Ex-Libris", "count": 13, "median_price": 100.00},
+                {"size": "ツイリー", "pattern": "Bolduc", "count": 13, "median_price": 110.00},
+                {"size": "不明", "pattern": "Les Voitures", "count": 12, "median_price": 49.50},
+                {"size": "ツイリー", "pattern": "Eperon d'Or", "count": 10, "median_price": 125.00},
+                {"size": "不明", "pattern": "Les Clés", "count": 10, "median_price": 59.00},
+                {"size": "不明", "pattern": "Promenade de Longchamps", "count": 10, "median_price": 64.95},
+                {"size": "カレ45", "pattern": "Brides de Gala", "count": 9, "median_price": 210.00}
+            ],
+            "accessory_detail": {
+                "total_count": 1498,
+                "item_type_analysis": {
+                    "Brooch/Pin": {"count": 188, "avg_price": 264.67, "median_price": 160.0, "min_price": 26.0, "max_price": 5560.0},
+                    "Tie - Silk": {"count": 118, "avg_price": 95.89, "median_price": 60.88, "min_price": 1.0, "max_price": 599.0},
+                    "Bangle - Enamel": {"count": 96, "avg_price": 221.84, "median_price": 202.5, "min_price": 86.0, "max_price": 650.0},
+                    "Cadena/Padlock": {"count": 87, "avg_price": 222.79, "median_price": 152.5, "min_price": 15.25, "max_price": 1370.99},
+                    "Scarf Ring (Other)": {"count": 85, "avg_price": 151.14, "median_price": 135.49, "min_price": 51.0, "max_price": 530.0},
+                    "Scarf Ring - Chaine d'Ancre": {"count": 80, "avg_price": 145.41, "median_price": 132.0, "min_price": 67.83, "max_price": 260.0},
+                    "Scarf Ring - Gold": {"count": 77, "avg_price": 132.8, "median_price": 122.49, "min_price": 43.0, "max_price": 473.0},
+                    "Leather Bracelet": {"count": 75, "avg_price": 165.18, "median_price": 149.5, "min_price": 61.0, "max_price": 530.0},
+                    "Earrings": {"count": 74, "avg_price": 451.3, "median_price": 214.25, "min_price": 84.0, "max_price": 3690.0},
+                    "Necklace": {"count": 74, "avg_price": 344.87, "median_price": 181.74, "min_price": 82.0, "max_price": 4300.0},
+                    "Ring": {"count": 72, "avg_price": 225.77, "median_price": 149.72, "min_price": 8.5, "max_price": 2820.0},
+                    "Tie": {"count": 70, "avg_price": 110.34, "median_price": 70.0, "min_price": 10.0, "max_price": 455.0},
+                    "Chain Necklace": {"count": 63, "avg_price": 276.81, "median_price": 163.78, "min_price": 53.87, "max_price": 2340.0},
+                    "Belt": {"count": 57, "avg_price": 254.41, "median_price": 156.61, "min_price": 20.0, "max_price": 1110.0},
+                    "Bangle": {"count": 55, "avg_price": 257.82, "median_price": 250.0, "min_price": 53.52, "max_price": 586.0},
+                    "Belt - Constance": {"count": 43, "avg_price": 180.05, "median_price": 171.5, "min_price": 32.0, "max_price": 416.0},
+                    "Charm": {"count": 31, "avg_price": 235.12, "median_price": 175.0, "min_price": 40.0, "max_price": 1072.0},
+                    "Bracelet": {"count": 27, "avg_price": 523.77, "median_price": 224.5, "min_price": 49.1, "max_price": 4700.0},
+                    "Scarf Ring - Cosmos": {"count": 17, "avg_price": 153.73, "median_price": 167.5, "min_price": 69.0, "max_price": 198.0},
+                    "Scarf Ring - Silver/Palladium": {"count": 17, "avg_price": 148.33, "median_price": 120.0, "min_price": 54.74, "max_price": 265.08},
+                    "Cufflinks": {"count": 10, "avg_price": 195.42, "median_price": 189.5, "min_price": 55.0, "max_price": 410.0},
+                    "Charm - Rodeo": {"count": 10, "avg_price": 649.25, "median_price": 607.5, "min_price": 270.0, "max_price": 1440.0},
+                    "Glove Holder/Filou": {"count": 9, "avg_price": 90.28, "median_price": 51.0, "min_price": 26.0, "max_price": 211.0},
+                    "Belt - Reversible": {"count": 8, "avg_price": 256.64, "median_price": 164.5, "min_price": 16.0, "max_price": 742.0},
+                    "Belt Buckle Only": {"count": 7, "avg_price": 319.17, "median_price": 244.9, "min_price": 58.8, "max_price": 856.0},
+                    "Collier de Chien": {"count": 7, "avg_price": 422.84, "median_price": 317.05, "min_price": 130.5, "max_price": 1382.0},
+                    "Clic Clac": {"count": 5, "avg_price": 210.0, "median_price": 246.5, "min_price": 81.0, "max_price": 365.0},
+                    "Cadena - Elephant": {"count": 5, "avg_price": 313.05, "median_price": 306.0, "min_price": 226.49, "max_price": 411.74},
+                    "Belt - H Buckle": {"count": 5, "avg_price": 440.53, "median_price": 397.0, "min_price": 195.0, "max_price": 724.0},
+                    "Hapi": {"count": 4, "avg_price": 144.88, "median_price": 157.5, "min_price": 101.0, "max_price": 163.5},
+                    "Kelly Double Tour": {"count": 4, "avg_price": 301.38, "median_price": 192.75, "min_price": 120.0, "max_price": 700.0},
+                    "Chain Bracelet": {"count": 4, "avg_price": 1471.32, "median_price": 1570.0, "min_price": 425.28, "max_price": 2320.0}
+                },
+                "material_analysis": {
+                    "Unknown": {"count": 433, "avg_price": 207.36, "median_price": 147.38},
+                    "Leather": {"count": 249, "avg_price": 191.59, "median_price": 150.0},
+                    "Silk": {"count": 211, "avg_price": 138.69, "median_price": 116.11},
+                    "Gold/GP": {"count": 207, "avg_price": 280.14, "median_price": 162.45},
+                    "Silver": {"count": 183, "avg_price": 288.76, "median_price": 162.0},
+                    "Enamel": {"count": 138, "avg_price": 223.7, "median_price": 208.5},
+                    "Gold Plated": {"count": 42, "avg_price": 158.48, "median_price": 118.98},
+                    "18K Gold": {"count": 14, "avg_price": 1981.57, "median_price": 1515.0},
+                    "Horn/Buffalo": {"count": 8, "avg_price": 308.62, "median_price": 294.5},
+                    "Metal": {"count": 8, "avg_price": 315.18, "median_price": 289.5},
+                    "Palladium": {"count": 5, "avg_price": 241.05, "median_price": 255.0}
+                },
+                "type_material_cross": [
+                    {"type": "Tie - Silk", "material": "Silk", "count": 114, "median": 61.42},
+                    {"type": "Bangle - Enamel", "material": "Enamel", "count": 96, "median": 202.5},
+                    {"type": "Brooch/Pin", "material": "Silk", "count": 70, "median": 161.75},
+                    {"type": "Tie", "material": "Unknown", "count": 69, "median": 70.0},
+                    {"type": "Brooch/Pin", "material": "Unknown", "count": 65, "median": 144.4},
+                    {"type": "Scarf Ring (Other)", "material": "Unknown", "count": 63, "median": 135.49},
+                    {"type": "Leather Bracelet", "material": "Leather", "count": 60, "median": 153.75},
+                    {"type": "Scarf Ring - Gold", "material": "Gold/GP", "count": 53, "median": 126.5},
+                    {"type": "Scarf Ring - Chaine d'Ancre", "material": "Unknown", "count": 52, "median": 140.0},
+                    {"type": "Chain Necklace", "material": "Unknown", "count": 49, "median": 138.78},
+                    {"type": "Cadena/Padlock", "material": "Silver", "count": 48, "median": 126.5},
+                    {"type": "Belt - Constance", "material": "Leather", "count": 35, "median": 172.5},
+                    {"type": "Ring", "material": "Leather", "count": 35, "median": 63.0},
+                    {"type": "Necklace", "material": "Silver", "count": 30, "median": 159.5},
+                    {"type": "Belt", "material": "Leather", "count": 29, "median": 150.68},
+                    {"type": "Brooch/Pin", "material": "Leather", "count": 24, "median": 103.25},
+                    {"type": "Cadena/Padlock", "material": "Gold/GP", "count": 21, "median": 234.65},
+                    {"type": "Earrings", "material": "Enamel", "count": 21, "median": 204.5},
+                    {"type": "Bangle", "material": "Unknown", "count": 20, "median": 300.13},
+                    {"type": "Scarf Ring - Gold", "material": "Gold Plated", "count": 20, "median": 89.66}
+                ]
+            },
+            "wallet_analysis": {
+                "total_count": 645,
+                "total_revenue": 113010.56,
+                "avg_price": 175.21,
+                "median_price": 107.5,
+                "item_type_analysis": {
+                    "Bearn": {"count": 128, "avg_price": 185.76, "median_price": 159.0, "min_price": 10.5, "max_price": 805.0},
+                    "Azap Silk'in": {"count": 59, "avg_price": 154.33, "median_price": 140.0, "min_price": 41.0, "max_price": 590.0},
+                    "Purse": {"count": 59, "avg_price": 112.63, "median_price": 80.0, "min_price": 29.0, "max_price": 931.0},
+                    "Coin Purse/Case": {"count": 49, "avg_price": 88.36, "median_price": 61.0, "min_price": 12.5, "max_price": 1076.0},
+                    "Card Holder/Case": {"count": 47, "avg_price": 158.99, "median_price": 89.0, "min_price": 17.5, "max_price": 699.99},
+                    "Bastia": {"count": 47, "avg_price": 86.1, "median_price": 70.0, "min_price": 2.25, "max_price": 340.0},
+                    "Dogon": {"count": 45, "avg_price": 175.91, "median_price": 128.13, "min_price": 20.5, "max_price": 723.0},
+                    "Wallet (Other)": {"count": 67, "avg_price": 104.8, "median_price": 59.0, "min_price": 11.61, "max_price": 809.0},
+                    "Key Holder/Case": {"count": 27, "avg_price": 71.58, "median_price": 51.0, "min_price": 8.5, "max_price": 319.26},
+                    "Long Wallet": {"count": 20, "avg_price": 168.1, "median_price": 150.75, "min_price": 40.0, "max_price": 421.0},
+                    "Azap Compact": {"count": 18, "avg_price": 236.67, "median_price": 172.5, "min_price": 29.0, "max_price": 1160.0},
+                    "Calvi": {"count": 17, "avg_price": 89.63, "median_price": 73.0, "min_price": 15.5, "max_price": 226.0},
+                    "Citizen Twill": {"count": 10, "avg_price": 186.5, "median_price": 102.53, "min_price": 56.0, "max_price": 550.0},
+                    "Azap": {"count": 10, "avg_price": 93.45, "median_price": 92.5, "min_price": 18.5, "max_price": 157.5},
+                    "Kelly Wallet/Pochette": {"count": 8, "avg_price": 2256.1, "median_price": 1522.78, "min_price": 1058.48, "max_price": 5580.0},
+                    "Bearn Soufflet": {"count": 7, "avg_price": 195.31, "median_price": 202.5, "min_price": 86.0, "max_price": 290.0},
+                    "MC2": {"count": 6, "avg_price": 286.29, "median_price": 188.5, "min_price": 32.63, "max_price": 800.0},
+                    "Dogon Compact/Duo": {"count": 4, "avg_price": 129.75, "median_price": 127.75, "min_price": 61.0, "max_price": 202.5},
+                    "Tarmac": {"count": 4, "avg_price": 168.5, "median_price": 142.0, "min_price": 100.0, "max_price": 290.0},
+                    "Calvi Duo": {"count": 3, "avg_price": 618.0, "median_price": 680.0, "min_price": 94.0, "max_price": 1080.0},
+                    "Passport Holder": {"count": 3, "avg_price": 164.64, "median_price": 148.43, "min_price": 120.5, "max_price": 225.0},
+                    "Constance Wallet": {"count": 2, "avg_price": 1640.0, "median_price": 1640.0, "min_price": 1140.0, "max_price": 2140.0}
+                },
+                "material_analysis": {
+                    "Epsom": {"count": 155, "avg_price": 204.57, "median_price": 125.05},
+                    "Leather": {"count": 113, "avg_price": 207.87, "median_price": 123.0},
+                    "Canvas/Toile": {"count": 92, "avg_price": 64.75, "median_price": 62.5},
+                    "Chevre/Mysore": {"count": 86, "avg_price": 148.66, "median_price": 123.5},
+                    "Unknown": {"count": 48, "avg_price": 284.86, "median_price": 163.5},
+                    "Swift": {"count": 44, "avg_price": 118.43, "median_price": 100.5},
+                    "Box Calf": {"count": 44, "avg_price": 213.69, "median_price": 143.0},
+                    "Togo": {"count": 25, "avg_price": 134.55, "median_price": 111.36},
+                    "Clemence": {"count": 18, "avg_price": 171.99, "median_price": 120.06},
+                    "Silk": {"count": 11, "avg_price": 143.77, "median_price": 134.39},
+                    "Veau": {"count": 6, "avg_price": 123.67, "median_price": 68.5},
+                    "Evercolor": {"count": 3, "avg_price": 667.0, "median_price": 800.0}
+                },
+                "color_analysis": {
+                    "Unknown": {"count": 134, "avg_price": 160.56, "median_price": 90.0},
+                    "Black": {"count": 112, "avg_price": 183.69, "median_price": 121.75},
+                    "Gold": {"count": 104, "avg_price": 276.48, "median_price": 128.75},
+                    "Brown": {"count": 79, "avg_price": 140.18, "median_price": 112.5},
+                    "Blue": {"count": 68, "avg_price": 139.99, "median_price": 93.5},
+                    "Pink": {"count": 59, "avg_price": 146.14, "median_price": 123.0},
+                    "Red": {"count": 38, "avg_price": 118.27, "median_price": 100.75},
+                    "Green": {"count": 22, "avg_price": 140.59, "median_price": 113.5},
+                    "White": {"count": 12, "avg_price": 207.97, "median_price": 116.8},
+                    "Beige": {"count": 8, "avg_price": 76.33, "median_price": 67.0},
+                    "Navy": {"count": 7, "avg_price": 235.22, "median_price": 95.0}
+                },
+                "model_detail": {
+                    "Bearn": {"count": 128, "avg_price": 185.76, "median_price": 159.0, "min_price": 10.5, "max_price": 805.0, "materials": {"Epsom": 40, "Leather": 28, "Box Calf": 21, "Chevre/Mysore": 17, "Swift": 17}},
+                    "Azap Silk'in": {"count": 59, "avg_price": 154.33, "median_price": 140.0, "min_price": 41.0, "max_price": 590.0, "materials": {"Epsom": 29, "Chevre/Mysore": 22, "Silk": 8}},
+                    "Bastia": {"count": 47, "avg_price": 86.1, "median_price": 70.0, "min_price": 2.25, "max_price": 340.0, "materials": {"Epsom": 27, "Chevre/Mysore": 9, "Swift": 5}},
+                    "Dogon": {"count": 45, "avg_price": 175.91, "median_price": 128.13, "min_price": 20.5, "max_price": 723.0, "materials": {"Togo": 22, "Clemence": 12, "Leather": 6}},
+                    "Calvi": {"count": 17, "avg_price": 89.63, "median_price": 73.0, "min_price": 15.5, "max_price": 226.0, "materials": {"Leather": 8, "Epsom": 6, "Swift": 2}},
+                    "Citizen Twill": {"count": 10, "avg_price": 186.5, "median_price": 102.53, "min_price": 56.0, "max_price": 550.0, "materials": {"Box Calf": 3, "Swift": 2, "Chevre/Mysore": 2}},
+                    "Kelly Wallet/Pochette": {"count": 8, "avg_price": 2256.1, "median_price": 1522.78, "min_price": 1058.48, "max_price": 5580.0, "materials": {"Leather": 3, "Epsom": 3, "Chevre/Mysore": 1}}
+                },
+                "model_material_cross": [
+                    {"model": "Bearn", "material": "Epsom", "count": 40, "median": 167.5},
+                    {"model": "Wallet (Other)", "material": "Canvas/Toile", "count": 37, "median": 51.0},
+                    {"model": "Azap Silk'in", "material": "Epsom", "count": 29, "median": 140.0},
+                    {"model": "Bearn", "material": "Leather", "count": 28, "median": 152.09},
+                    {"model": "Bastia", "material": "Epsom", "count": 27, "median": 70.0},
+                    {"model": "Azap Silk'in", "material": "Chevre/Mysore", "count": 22, "median": 145.5},
+                    {"model": "Dogon", "material": "Togo", "count": 22, "median": 115.18},
+                    {"model": "Bearn", "material": "Box Calf", "count": 21, "median": 171.5},
+                    {"model": "Bearn", "material": "Swift", "count": 17, "median": 140.0},
+                    {"model": "Bearn", "material": "Chevre/Mysore", "count": 17, "median": 181.28},
+                    {"model": "Coin Purse/Case", "material": "Leather", "count": 15, "median": 66.0},
+                    {"model": "Card Holder/Case", "material": "Leather", "count": 15, "median": 100.99},
+                    {"model": "Dogon", "material": "Clemence", "count": 12, "median": 120.06},
+                    {"model": "Coin Purse/Case", "material": "Chevre/Mysore", "count": 11, "median": 61.0},
+                    {"model": "Azap Compact", "material": "Epsom", "count": 10, "median": 153.75},
+                    {"model": "Coin Purse/Case", "material": "Epsom", "count": 10, "median": 66.0},
+                    {"model": "Key Holder/Case", "material": "Leather", "count": 10, "median": 56.5},
+                    {"model": "Card Holder/Case", "material": "Unknown", "count": 10, "median": 122.0},
+                    {"model": "Bastia", "material": "Chevre/Mysore", "count": 9, "median": 64.11},
+                    {"model": "Long Wallet", "material": "Canvas/Toile", "count": 9, "median": 69.0}
+                ]
+            }
+        };
+
+        // ===== THEME =====
+        function toggleTheme() {
+            const body = document.body;
+            const btn = document.querySelector('.theme-toggle');
+            if (body.getAttribute('data-theme') === 'light') {
+                body.removeAttribute('data-theme');
+                btn.textContent = '🌙 ダークモード';
+            } else {
+                body.setAttribute('data-theme', 'light');
+                btn.textContent = '☀️ ライトモード';
+            }
+            // Redraw charts
+            drawAllCharts();
+        }
+
+        // ===== TABS =====
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.tab).classList.add('active');
+            });
+        });
+
+        // ===== CHART CONFIG =====
+        function getChartLayout(title = '') {
+            const isDark = !document.body.hasAttribute('data-theme');
+            return {
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { color: isDark ? '#eee' : '#333', size: 12 },
+                margin: { t: 30, b: 50, l: 60, r: 30 },
+                showlegend: true,
+                legend: { orientation: 'h', y: -0.15 }
+            };
+        }
+
+        const config = { responsive: true, displayModeBar: false };
+
+        // ===== DRAW CHARTS =====
+        function drawAllCharts() {
+            drawOverviewCharts();
+            drawScarfCharts();
+            drawBagCharts();
+            drawAccessoryCharts();
+            drawLeatherCharts();
+            drawPartsCharts();
+            drawOtherCharts();
+            populateTables();
+        }
+
+        function drawOverviewCharts() {
+            const catData = analysisData.category_distribution;
+            const cats = Object.keys(catData).sort((a, b) => catData[b].count - catData[a].count);
+
+            // Category Count Chart
+            Plotly.newPlot('chart-category-count', [{
+                type: 'bar',
+                x: cats.map(c => catData[c].count),
+                y: cats.map(c => catData[c].icon + ' ' + c),
+                orientation: 'h',
+                marker: { color: '#FF6B00' }
+            }], {...getChartLayout(), yaxis: {automargin: true}}, config);
+
+            // Category Sales Pie
+            Plotly.newPlot('chart-category-sales', [{
+                type: 'pie',
+                labels: cats,
+                values: cats.map(c => catData[c].total_sales),
+                hole: 0.4,
+                marker: { colors: ['#FF6B00', '#FF9800', '#FFC107', '#4CAF50', '#2196F3', '#9C27B0', '#E91E63', '#00BCD4', '#795548'] },
+                textinfo: 'label+percent',
+                textposition: 'outside'
+            }], {...getChartLayout(), showlegend: false}, config);
+
+            // Price Distribution
+            const priceDist = analysisData.price_distribution;
+            const priceLabels = Object.keys(priceDist);
+            Plotly.newPlot('chart-price-dist', [{
+                type: 'bar',
+                x: priceLabels,
+                y: priceLabels.map(l => priceDist[l]),
+                marker: { color: '#4CAF50' }
+            }], {...getChartLayout(), xaxis: {tickangle: -45}}, config);
+
+            // Material Distribution
+            const matDist = analysisData.material_distribution;
+            const mats = Object.keys(matDist).filter(m => m !== '不明').slice(0, 8);
+            Plotly.newPlot('chart-material', [{
+                type: 'pie',
+                labels: mats,
+                values: mats.map(m => matDist[m]),
+                hole: 0.3,
+                marker: { colors: ['#E91E63', '#9C27B0', '#673AB7', '#3F51B5', '#2196F3', '#00BCD4', '#009688', '#4CAF50'] }
+            }], {...getChartLayout(), showlegend: true}, config);
+        }
+
+        function drawScarfCharts() {
+            const sizeData = analysisData.scarf_analysis.by_size;
+            const sizes = Object.keys(sizeData).filter(s => s !== '不明').sort((a, b) => sizeData[b].count - sizeData[a].count);
+
+            // Size Count
+            Plotly.newPlot('chart-scarf-size', [{
+                type: 'pie',
+                labels: sizes,
+                values: sizes.map(s => sizeData[s].count),
+                hole: 0.4,
+                marker: { colors: ['#FF6B00', '#FF9800', '#FFC107', '#4CAF50', '#2196F3', '#9C27B0'] }
+            }], {...getChartLayout()}, config);
+
+            // Pattern Count (Top 15, excluding unknown)
+            const patternData = analysisData.scarf_analysis.by_pattern;
+            const patterns = Object.keys(patternData)
+                .filter(p => p !== '不明/その他')
+                .sort((a, b) => patternData[b].count - patternData[a].count)
+                .slice(0, 15);
+
+            Plotly.newPlot('chart-scarf-pattern', [{
+                type: 'bar',
+                x: patterns.map(p => patternData[p].count),
+                y: patterns,
+                orientation: 'h',
+                marker: { color: '#E91E63' }
+            }], {...getChartLayout(), yaxis: {automargin: true}}, config);
+
+            // Size Price Comparison
+            Plotly.newPlot('chart-scarf-price', [{
+                type: 'bar',
+                x: sizes,
+                y: sizes.map(s => sizeData[s].median_price),
+                marker: { color: '#4CAF50' },
+                name: '中央値'
+            }, {
+                type: 'bar',
+                x: sizes,
+                y: sizes.map(s => sizeData[s].avg_price),
+                marker: { color: '#2196F3' },
+                name: '平均'
+            }], {...getChartLayout(), barmode: 'group'}, config);
+
+            // Heatmap - Size x Pattern (using size_pattern_cross data)
+            const heatSizes = ['カレ90', 'ツイリー', 'カレ45', 'カレ70', '不明'];
+            const heatPatterns = ['Brides de Gala', 'Les Clés', 'Eperon d\'Or', 'Le Flacon', 'Les Voitures', 'Les Tambours', 'Promenade de Longchamps', 'Bolduc'];
+            const cross = analysisData.size_pattern_cross || [];
+            const heatData = heatSizes.map(size =>
+                heatPatterns.map(pattern => {
+                    const found = cross.find(c => c.size === size && c.pattern === pattern);
+                    return found ? found.count : 0;
+                })
+            );
+
+            Plotly.newPlot('chart-scarf-heatmap', [{
+                type: 'heatmap',
+                z: heatData,
+                x: heatPatterns,
+                y: heatSizes,
+                colorscale: 'YlOrRd',
+                showscale: true,
+                hoverongaps: false,
+                text: heatData.map(row => row.map(v => v > 0 ? v : '')),
+                texttemplate: '%{text}',
+                textfont: {size: 12}
+            }], {...getChartLayout(), xaxis: {tickangle: -45}, margin: {t: 30, b: 100, l: 80, r: 30}}, config);
+
+            // Animal Pattern Charts
+            drawAnimalCharts();
+        }
+
+        function drawAnimalCharts() {
+            const animalData = analysisData.animal_pattern_analysis;
+            const animals = Object.keys(animalData).sort((a, b) => animalData[b].count - animalData[a].count);
+
+            // Animal Pattern Count
+            Plotly.newPlot('chart-animal-pattern', [{
+                type: 'bar',
+                x: animals.map(a => animalData[a].count),
+                y: animals,
+                orientation: 'h',
+                marker: {
+                    color: animals.map((a, i) => ['#8B4513', '#FF6B00', '#9C27B0', '#4CAF50', '#00BCD4', '#E91E63', '#FFC107', '#FF5722', '#607D8B', '#795548', '#2196F3', '#009688', '#673AB7', '#3F51B5', '#FFEB3B'][i % 15])
+                },
+                text: animals.map(a => animalData[a].count),
+                textposition: 'outside'
+            }], {...getChartLayout(), yaxis: {automargin: true}, showlegend: false}, config);
+
+            // Animal Price (sorted by median)
+            const animalsByPrice = [...animals].sort((a, b) => animalData[b].median_price - animalData[a].median_price);
+            Plotly.newPlot('chart-animal-price', [{
+                type: 'bar',
+                x: animalsByPrice,
+                y: animalsByPrice.map(a => animalData[a].median_price),
+                marker: {
+                    color: animalsByPrice.map(a => animalData[a].median_price),
+                    colorscale: 'Viridis'
+                }
+            }], {...getChartLayout(), xaxis: {tickangle: -45}}, config);
+
+            // Animal Heatmap - Size x Animal Pattern
+            const animalSizes = ['カレ90', 'ツイリー', 'ストール', 'カレ45', '不明'];
+            const topAnimals = ['Horse/馬', 'Chasse en Inde', 'Cat/猫', 'Jungle Love', 'Dog/犬', 'Les Leopards', 'Bird/鳥', 'Tiger/虎', 'Elephant/象'];
+            const animalCross = analysisData.size_animal_cross || [];
+            const animalHeatData = animalSizes.map(size =>
+                topAnimals.map(pattern => {
+                    const found = animalCross.find(c => c.size === size && c.pattern === pattern);
+                    return found ? found.count : 0;
+                })
+            );
+
+            Plotly.newPlot('chart-animal-heatmap', [{
+                type: 'heatmap',
+                z: animalHeatData,
+                x: topAnimals,
+                y: animalSizes,
+                colorscale: [[0, '#fff5f0'], [0.2, '#fee0d2'], [0.4, '#fcbba1'], [0.6, '#fc9272'], [0.8, '#fb6a4a'], [1, '#de2d26']],
+                showscale: true,
+                hoverongaps: false,
+                text: animalHeatData.map(row => row.map(v => v > 0 ? v : '')),
+                texttemplate: '%{text}',
+                textfont: {size: 14, color: '#333'}
+            }], {...getChartLayout(), xaxis: {tickangle: -45}, margin: {t: 30, b: 120, l: 80, r: 30}}, config);
+        }
+
+        function drawBagCharts() {
+            const modelData = analysisData.bag_analysis.by_model;
+            const models = Object.keys(modelData).sort((a, b) => modelData[b].count - modelData[a].count);
+
+            // Model Count
+            Plotly.newPlot('chart-bag-model', [{
+                type: 'bar',
+                x: models.map(m => modelData[m].count),
+                y: models,
+                orientation: 'h',
+                marker: { color: '#9C27B0' }
+            }], {...getChartLayout(), yaxis: {automargin: true}}, config);
+
+            // Model Price (sorted by median)
+            const modelsByPrice = [...models].sort((a, b) => modelData[b].median_price - modelData[a].median_price);
+            Plotly.newPlot('chart-bag-price', [{
+                type: 'bar',
+                x: modelsByPrice,
+                y: modelsByPrice.map(m => modelData[m].median_price),
+                marker: {
+                    color: modelsByPrice.map(m => modelData[m].median_price),
+                    colorscale: 'Viridis'
+                }
+            }], {...getChartLayout(), xaxis: {tickangle: -45}}, config);
+        }
+
+        function drawAccessoryCharts() {
+            const data = analysisData.accessory_analysis;
+            const types = Object.keys(data).sort((a, b) => data[b].count - data[a].count);
+
+            Plotly.newPlot('chart-accessory-type', [{
+                type: 'bar',
+                x: types.map(t => data[t].count),
+                y: types,
+                orientation: 'h',
+                marker: { color: '#00BCD4' }
+            }], {...getChartLayout(), yaxis: {automargin: true}}, config);
+
+            const typesByPrice = [...types].sort((a, b) => data[b].median_price - data[a].median_price);
+            Plotly.newPlot('chart-accessory-price', [{
+                type: 'bar',
+                x: typesByPrice,
+                y: typesByPrice.map(t => data[t].median_price),
+                marker: { color: '#FF9800' }
+            }], {...getChartLayout(), xaxis: {tickangle: -45}}, config);
+
+            // Bangle by Material
+            const bangleData = analysisData.bangle_by_material;
+            const bangleMats = Object.keys(bangleData).filter(m => m !== '不明').sort((a, b) => bangleData[b].count - bangleData[a].count);
+            Plotly.newPlot('chart-bangle-material', [{
+                type: 'pie',
+                labels: bangleMats,
+                values: bangleMats.map(m => bangleData[m].count),
+                hole: 0.4,
+                marker: { colors: ['#E91E63', '#795548', '#FFD700', '#C0C0C0', '#B8860B', '#9E9E9E'] },
+                textinfo: 'label+percent'
+            }], {...getChartLayout(), showlegend: false}, config);
+
+            // Scarf Ring by Model
+            const ringData = analysisData.scarf_ring_by_model;
+            const ringModels = Object.keys(ringData).filter(m => m !== '不明/その他').sort((a, b) => ringData[b].count - ringData[a].count);
+            Plotly.newPlot('chart-scarf-ring-model', [{
+                type: 'bar',
+                x: ringModels.map(m => ringData[m].count),
+                y: ringModels,
+                orientation: 'h',
+                marker: { color: '#9C27B0' }
+            }], {...getChartLayout(), yaxis: {automargin: true}}, config);
+
+            // Tie by Pattern
+            const tieData = analysisData.tie_by_pattern;
+            const tiePatterns = Object.keys(tieData).filter(p => p !== '不明/その他').sort((a, b) => tieData[b].count - tieData[a].count);
+            Plotly.newPlot('chart-tie-pattern', [{
+                type: 'pie',
+                labels: tiePatterns,
+                values: tiePatterns.map(p => tieData[p].count),
+                hole: 0.4,
+                marker: { colors: ['#3F51B5', '#673AB7', '#009688', '#4CAF50', '#FFC107', '#FF5722'] },
+                textinfo: 'label+percent'
+            }], {...getChartLayout(), showlegend: false}, config);
+
+            // Tie Price by Pattern
+            const tieByPrice = [...tiePatterns].sort((a, b) => tieData[b].median_price - tieData[a].median_price);
+            Plotly.newPlot('chart-tie-price', [{
+                type: 'bar',
+                x: tieByPrice,
+                y: tieByPrice.map(p => tieData[p].median_price),
+                marker: { color: '#607D8B' }
+            }], {...getChartLayout(), xaxis: {tickangle: -45}}, config);
+
+            // アクセサリー詳細チャート
+            drawAccessoryDetailCharts();
+        }
+
+        function drawAccessoryDetailCharts() {
+            const detail = analysisData.accessory_detail;
+            if (!detail) return;
+
+            // アイテムタイプ別販売数（上位20）
+            const itemTypes = Object.entries(detail.item_type_analysis)
+                .sort((a, b) => b[1].count - a[1].count)
+                .slice(0, 20);
+
+            Plotly.newPlot('chart-accessory-detail-type', [{
+                type: 'bar',
+                x: itemTypes.map(([k, v]) => v.count),
+                y: itemTypes.map(([k]) => k),
+                orientation: 'h',
+                marker: {
+                    color: itemTypes.map((_, i) =>
+                        ['#00BCD4', '#00ACC1', '#0097A7', '#00838F', '#006064',
+                         '#4DD0E1', '#26C6DA', '#00BFA5', '#009688', '#00796B',
+                         '#4DB6AC', '#26A69A', '#80CBC4', '#B2DFDB', '#E0F2F1',
+                         '#4FC3F7', '#29B6F6', '#03A9F4', '#039BE5', '#0288D1'][i % 20]
+                    )
+                },
+                text: itemTypes.map(([k, v]) => `$${v.median_price.toFixed(0)}`),
+                textposition: 'outside'
+            }], {...getChartLayout(), yaxis: {automargin: true}, margin: {l: 180, r: 80}}, config);
+
+            // 素材別分布
+            const materials = Object.entries(detail.material_analysis)
+                .filter(([k]) => k !== 'Unknown')
+                .sort((a, b) => b[1].count - a[1].count);
+
+            Plotly.newPlot('chart-accessory-material', [{
+                type: 'pie',
+                labels: materials.map(([k]) => k),
+                values: materials.map(([k, v]) => v.count),
+                hole: 0.4,
+                marker: {
+                    colors: ['#795548', '#FFD700', '#C0C0C0', '#E91E63', '#B8860B',
+                             '#9E9E9E', '#CD7F32', '#4169E1', '#228B22', '#DC143C']
+                }
+            }], {...getChartLayout()}, config);
+
+            // タイプ×素材ヒートマップ
+            const crossData = detail.type_material_cross || [];
+            const types = [...new Set(crossData.map(d => d.type))];
+            const matList = [...new Set(crossData.map(d => d.material))];
+
+            const heatData = types.map(type =>
+                matList.map(mat => {
+                    const found = crossData.find(c => c.type === type && c.material === mat);
+                    return found ? found.count : 0;
+                })
+            );
+
+            const heatText = types.map(type =>
+                matList.map(mat => {
+                    const found = crossData.find(c => c.type === type && c.material === mat);
+                    return found ? found.count : '';
+                })
+            );
+
+            Plotly.newPlot('chart-accessory-heatmap', [{
+                type: 'heatmap',
+                z: heatData,
+                x: matList,
+                y: types,
+                text: heatText,
+                texttemplate: '%{text}',
+                colorscale: [
+                    [0, '#E0F7FA'],
+                    [0.25, '#4DD0E1'],
+                    [0.5, '#00BCD4'],
+                    [0.75, '#0097A7'],
+                    [1, '#006064']
+                ],
+                showscale: true,
+                hoverongaps: false
+            }], {
+                ...getChartLayout(),
+                xaxis: {tickangle: -45, automargin: true},
+                yaxis: {automargin: true},
+                margin: {l: 180, b: 100, r: 100}
+            }, config);
+        }
+
+        function drawLeatherCharts() {
+            const data = analysisData.leather_goods_analysis;
+            const types = Object.keys(data).sort((a, b) => data[b].count - data[a].count);
+
+            Plotly.newPlot('chart-leather-type', [{
+                type: 'bar',
+                x: types.map(t => data[t].count),
+                y: types,
+                orientation: 'h',
+                marker: { color: '#795548' }
+            }], {...getChartLayout(), yaxis: {automargin: true}}, config);
+
+            const typesByPrice = [...types].sort((a, b) => data[b].median_price - data[a].median_price);
+            Plotly.newPlot('chart-leather-price', [{
+                type: 'bar',
+                x: typesByPrice,
+                y: typesByPrice.map(t => data[t].median_price),
+                marker: { color: '#607D8B' }
+            }], {...getChartLayout(), xaxis: {tickangle: -45}}, config);
+
+            // 財布細分化チャート
+            drawWalletCharts();
+        }
+
+        function drawWalletCharts() {
+            const wallet = analysisData.wallet_analysis;
+            if (!wallet) return;
+
+            // モデル別販売数（上位15）
+            const itemTypes = Object.entries(wallet.item_type_analysis)
+                .sort((a, b) => b[1].count - a[1].count)
+                .slice(0, 15);
+
+            Plotly.newPlot('chart-wallet-model', [{
+                type: 'bar',
+                x: itemTypes.map(([k, v]) => v.count),
+                y: itemTypes.map(([k]) => k),
+                orientation: 'h',
+                marker: {
+                    color: itemTypes.map((_, i) =>
+                        ['#FF6B00', '#E65100', '#FF9800', '#FFC107', '#795548',
+                         '#607D8B', '#9E9E9E', '#5D4037', '#8D6E63', '#A1887F',
+                         '#BCAAA4', '#D7CCC8', '#4E342E', '#3E2723', '#6D4C41'][i % 15]
+                    )
+                },
+                text: itemTypes.map(([k, v]) => `$${v.median_price.toFixed(0)}`),
+                textposition: 'outside'
+            }], {...getChartLayout(), yaxis: {automargin: true}, margin: {l: 150, r: 80}}, config);
+
+            // モデル別価格（上位10、高価格順）
+            const byPrice = Object.entries(wallet.item_type_analysis)
+                .filter(([k, v]) => v.count >= 3)
+                .sort((a, b) => b[1].median_price - a[1].median_price)
+                .slice(0, 10);
+
+            Plotly.newPlot('chart-wallet-model-price', [{
+                type: 'bar',
+                x: byPrice.map(([k]) => k),
+                y: byPrice.map(([k, v]) => v.median_price),
+                marker: {
+                    color: byPrice.map((_, i) => `rgba(255, 107, 0, ${1 - i * 0.08})`)
+                },
+                text: byPrice.map(([k, v]) => `$${v.median_price.toFixed(0)}`),
+                textposition: 'outside'
+            }], {...getChartLayout(), xaxis: {tickangle: -45}, margin: {b: 120}}, config);
+
+            // 素材別
+            const materials = Object.entries(wallet.material_analysis)
+                .filter(([k]) => k !== 'Unknown')
+                .sort((a, b) => b[1].count - a[1].count);
+
+            Plotly.newPlot('chart-wallet-material', [{
+                type: 'pie',
+                labels: materials.map(([k]) => k),
+                values: materials.map(([k, v]) => v.count),
+                hole: 0.4,
+                marker: {
+                    colors: ['#795548', '#8D6E63', '#A1887F', '#BCAAA4', '#D7CCC8',
+                             '#5D4037', '#4E342E', '#6D4C41', '#3E2723', '#EFEBE9']
+                }
+            }], {...getChartLayout()}, config);
+
+            // 色別
+            const colors = Object.entries(wallet.color_analysis)
+                .filter(([k]) => k !== 'Unknown')
+                .sort((a, b) => b[1].count - a[1].count);
+
+            const colorMap = {
+                'Black': '#333333', 'Gold': '#FFD700', 'Brown': '#8B4513',
+                'Blue': '#1E90FF', 'Pink': '#FFB6C1', 'Red': '#DC143C',
+                'Green': '#228B22', 'White': '#F5F5F5', 'Beige': '#F5DEB3',
+                'Navy': '#000080', 'Grey': '#808080', 'Bordeaux': '#722F37'
+            };
+
+            Plotly.newPlot('chart-wallet-color', [{
+                type: 'pie',
+                labels: colors.map(([k]) => k),
+                values: colors.map(([k, v]) => v.count),
+                hole: 0.4,
+                marker: {
+                    colors: colors.map(([k]) => colorMap[k] || '#999')
+                }
+            }], {...getChartLayout()}, config);
+
+            // モデル×素材ヒートマップ
+            const crossData = wallet.model_material_cross || [];
+            const models = [...new Set(crossData.map(d => d.model))];
+            const matList = [...new Set(crossData.map(d => d.material))];
+
+            const heatData = models.map(model =>
+                matList.map(mat => {
+                    const found = crossData.find(c => c.model === model && c.material === mat);
+                    return found ? found.count : 0;
+                })
+            );
+
+            const heatText = models.map(model =>
+                matList.map(mat => {
+                    const found = crossData.find(c => c.model === model && c.material === mat);
+                    return found ? found.count : '';
+                })
+            );
+
+            Plotly.newPlot('chart-wallet-heatmap', [{
+                type: 'heatmap',
+                z: heatData,
+                x: matList,
+                y: models,
+                text: heatText,
+                texttemplate: '%{text}',
+                colorscale: [
+                    [0, '#FFF3E0'],
+                    [0.25, '#FFB74D'],
+                    [0.5, '#FF9800'],
+                    [0.75, '#F57C00'],
+                    [1, '#E65100']
+                ],
+                showscale: true,
+                hoverongaps: false
+            }], {
+                ...getChartLayout(),
+                xaxis: {tickangle: -45, automargin: true},
+                yaxis: {automargin: true},
+                margin: {l: 150, b: 100, r: 100}
+            }, config);
+        }
+
+        function drawPartsCharts() {
+            const data = analysisData.parts_analysis;
+            const types = Object.keys(data).sort((a, b) => data[b].count - data[a].count);
+
+            Plotly.newPlot('chart-parts-type', [{
+                type: 'pie',
+                labels: types,
+                values: types.map(t => data[t].count),
+                hole: 0.4,
+                marker: { colors: ['#FF6B00', '#FF9800', '#FFC107', '#4CAF50', '#2196F3', '#9C27B0', '#E91E63'] }
+            }], {...getChartLayout()}, config);
+
+            const typesByPrice = [...types].sort((a, b) => data[b].median_price - data[a].median_price);
+            Plotly.newPlot('chart-parts-price', [{
+                type: 'bar',
+                x: typesByPrice,
+                y: typesByPrice.map(t => data[t].median_price),
+                marker: { color: '#9E9E9E' }
+            }], {...getChartLayout(), xaxis: {tickangle: -45}}, config);
+        }
+
+        function drawOtherCharts() {
+            const detail = analysisData.other_detail_analysis;
+            if (!detail) return;
+
+            const data = detail.detail_categories;
+            const major = detail.major_categories;
+            const subcats = Object.keys(data).sort((a, b) => data[b].count - data[a].count);
+
+            // 大カテゴリ別分布（円グラフ）
+            const majorNames = Object.keys(major).filter(m => m !== 'Exclude/除外');
+            const majorCounts = majorNames.map(m => major[m].count);
+            Plotly.newPlot('chart-other-major', [{
+                type: 'pie',
+                labels: majorNames.map(m => m.split('/')[1] || m),
+                values: majorCounts,
+                textinfo: 'label+value',
+                textposition: 'inside',
+                marker: {
+                    colors: ['#FF6B00', '#9E9E9E', '#4CAF50', '#2196F3', '#E91E63', '#FFC107', '#9C27B0', '#00BCD4', '#673AB7', '#FF5722', '#795548']
+                }
+            }], getChartLayout(), config);
+
+            // 詳細カテゴリ別（上位20）
+            const top20 = subcats.filter(s => !s.includes('除外') && !s.includes('Invalid')).slice(0, 20);
+            Plotly.newPlot('chart-other-detail', [{
+                type: 'bar',
+                x: top20.map(s => data[s].count),
+                y: top20.map(s => s.split('/')[1] || s),
+                orientation: 'h',
+                marker: {
+                    color: top20.map((s, i) => {
+                        if (s.includes('バッグ') || s.includes('Bag')) return '#E91E63';
+                        if (s.includes('アクセサリー') || s.includes('Accessory')) return '#9C27B0';
+                        if (s.includes('スカーフ') || s.includes('Scarf')) return '#FF6B00';
+                        if (s.includes('靴') || s.includes('Shoes') || s.includes('Sandal') || s.includes('Sneaker')) return '#3F51B5';
+                        if (s.includes('時計') || s.includes('Watch')) return '#00BCD4';
+                        if (s.includes('衣') || s.includes('Knit') || s.includes('Jacket') || s.includes('Shirt')) return '#4CAF50';
+                        return '#FFC107';
+                    })
+                },
+                text: top20.map(s => data[s].count),
+                textposition: 'outside'
+            }], {...getChartLayout(), yaxis: {automargin: true}, xaxis: {range: [0, Math.max(...top20.map(s => data[s].count)) * 1.2]}}, config);
+
+            // 価格別（中央値・上位15）
+            const byPrice = [...subcats]
+                .filter(s => !s.includes('除外') && !s.includes('Invalid') && data[s].count >= 3)
+                .sort((a, b) => data[b].median_price - data[a].median_price)
+                .slice(0, 15);
+            Plotly.newPlot('chart-other-price', [{
+                type: 'bar',
+                x: byPrice.map(s => s.split('/')[1] || s),
+                y: byPrice.map(s => data[s].median_price),
+                marker: {
+                    color: byPrice.map(s => data[s].median_price),
+                    colorscale: 'Viridis'
+                },
+                text: byPrice.map(s => '$' + data[s].median_price.toFixed(0)),
+                textposition: 'outside'
+            }], {...getChartLayout(), xaxis: {tickangle: -45}, yaxis: {range: [0, Math.max(...byPrice.map(s => data[s].median_price)) * 1.15]}}, config);
+
+            // ヒートマップ：大カテゴリ×価格帯
+            const priceBands = ['$0-100', '$100-300', '$300-500', '$500-1000', '$1000+'];
+            const heatMajors = majorNames.filter(m => major[m].count >= 10);
+            // 価格帯データ生成（大まかな分布）
+            const heatData = heatMajors.map(m => {
+                const subs = Object.keys(data).filter(s => {
+                    const majorCat = getMajorCategory(s);
+                    return majorCat === m;
+                });
+                return priceBands.map((band, i) => {
+                    let count = 0;
+                    subs.forEach(s => {
+                        const med = data[s].median_price;
+                        if (i === 0 && med < 100) count += data[s].count;
+                        else if (i === 1 && med >= 100 && med < 300) count += data[s].count;
+                        else if (i === 2 && med >= 300 && med < 500) count += data[s].count;
+                        else if (i === 3 && med >= 500 && med < 1000) count += data[s].count;
+                        else if (i === 4 && med >= 1000) count += data[s].count;
+                    });
+                    return count;
+                });
+            });
+
+            Plotly.newPlot('chart-other-heatmap', [{
+                type: 'heatmap',
+                x: priceBands,
+                y: heatMajors.map(m => m.split('/')[1] || m),
+                z: heatData,
+                colorscale: 'YlOrRd',
+                text: heatData.map(row => row.map(v => v > 0 ? v.toString() : '')),
+                texttemplate: '%{text}',
+                hovertemplate: '%{y}<br>%{x}: %{z}件<extra></extra>'
+            }], {...getChartLayout(), xaxis: {side: 'top'}}, config);
+        }
+
+        function getMajorCategory(cat) {
+            const clothing = ['Knitwear/ニット', 'Jacket/Coat/ジャケット・コート', 'Shirt/Blouse/シャツ・ブラウス',
+                            'Dress/ドレス', 'Pants/Skirt/パンツ・スカート', 'Suit/スーツ', 'Swimwear/水着'];
+            const shoes = ['Sandals/サンダル', 'Sneakers/スニーカー', 'Boots/ブーツ', 'Loafers/ローファー',
+                         'Heels/ヒール', 'Flats/フラットシューズ', 'Slippers/Mules/スリッパ・ミュール',
+                         'Espadrilles/エスパドリーユ', 'Shoes-Other/靴その他'];
+            const fashion = ['Hat/帽子', 'Gloves/手袋', 'Baby/ベビー用品', 'Hand Muff/ハンドマフ'];
+            const home = ['Beach Towel/ビーチタオル', 'Hand Towel/ハンドタオル', 'Blanket/ブランケット',
+                        'Cushion/クッション', 'Glassware/グラス', 'Paperweight/ペーパーウェイト',
+                        'Frame/フォトフレーム', 'Hanger/ハンガー', 'Table Mat/テーブルマット',
+                        'Lacquer Box/漆器ボックス', 'Object/オブジェ', 'Mouse Pad/マウスパッド'];
+            const tech = ['Mobile Battery/モバイルバッテリー', 'Apple Watch Band/アップルウォッチバンド', 'Tech Accessories/テックアクセ'];
+            const beauty = ['Lipstick/リップ', 'Beauty Tools/ビューティーツール', 'Amenity/アメニティ', 'Comb/コーム'];
+            const stationery = ['Book/Catalog/書籍・カタログ', 'Measuring Tape/メジャー', 'Playing Cards/トランプ', 'Frisbee/フリスビー', 'Finger Skateboard/フィンガースケボー'];
+            const packaging = ['Bag Accessories/バッグ用品', 'Empty Box/空箱', 'Dust Bag/Storage/保存袋', 'Shopping Bag/紙袋'];
+            const watch = ['Watch/時計', 'Watch Band/時計バンド'];
+            const misc = ['Bag/バッグ（その他）', 'Accessory/アクセサリー（その他）', 'Scarf/スカーフ（その他）',
+                        'Wallet/革小物（その他）', 'Strap/ストラップ', 'Petit h/プティアッシュ', 'Wine Tools/ワインツール', 'Equestrian/馬具'];
+
+            if (clothing.includes(cat)) return 'Clothing/衣類';
+            if (shoes.includes(cat)) return 'Shoes/靴';
+            if (fashion.includes(cat)) return 'Fashion Accessories/ファッション小物';
+            if (home.includes(cat)) return 'Home/ホーム';
+            if (tech.includes(cat)) return 'Tech/テック';
+            if (beauty.includes(cat)) return 'Beauty/ビューティー';
+            if (stationery.includes(cat)) return 'Stationery & Games/ステーショナリー';
+            if (packaging.includes(cat)) return 'Packaging/パッケージング';
+            if (watch.includes(cat)) return 'Watch/時計';
+            if (misc.includes(cat)) return 'Misc Hermes/エルメス雑貨';
+            return 'Unclassified/未分類';
+        }
+
+        // ===== TABLES =====
+        function populateTables() {
+            // Category Table
+            const catData = analysisData.category_distribution;
+            const catTable = document.querySelector('#table-category tbody');
+            catTable.innerHTML = Object.keys(catData)
+                .sort((a, b) => catData[b].count - catData[a].count)
+                .map(cat => `
+                    <tr>
+                        <td>${catData[cat].icon} ${cat}</td>
+                        <td><span class="count-badge">${catData[cat].count.toLocaleString()}</span></td>
+                        <td class="price">$${catData[cat].total_sales.toLocaleString(undefined, {maximumFractionDigits: 0})}</td>
+                        <td class="price">$${catData[cat].avg_price.toFixed(2)}</td>
+                        <td class="price">$${catData[cat].median_price.toFixed(2)}</td>
+                    </tr>
+                `).join('');
+
+            // Scarf Pattern Table
+            const patternData = analysisData.scarf_analysis.by_pattern;
+            const patternTable = document.querySelector('#table-scarf-pattern tbody');
+            patternTable.innerHTML = Object.keys(patternData)
+                .sort((a, b) => patternData[b].count - patternData[a].count)
+                .map(pattern => `
+                    <tr>
+                        <td>${pattern}</td>
+                        <td><span class="count-badge">${patternData[pattern].count}</span></td>
+                        <td class="price">$${patternData[pattern].avg_price.toFixed(2)}</td>
+                        <td class="price">$${patternData[pattern].median_price.toFixed(2)}</td>
+                        <td>
+                            <a href="https://www.ebay.com/sch/i.html?_nkw=hermes+${encodeURIComponent(pattern)}&LH_Sold=1" target="_blank" class="search-link">eBay</a>
+                            <input type="checkbox" class="search-checkbox" data-id="hermes_ebay_0">
+                            <a href="https://jp.mercari.com/search?keyword=エルメス%20${encodeURIComponent(pattern)}&status=on_sale" target="_blank" class="search-link">メルカリ</a>
+                            <input type="checkbox" class="search-checkbox" data-id="hermes_mercari_1">
+                        </td>
+                    </tr>
+                `).join('');
+
+            // Animal Pattern Table
+            const animalData = analysisData.animal_pattern_analysis;
+            const animalTable = document.querySelector('#table-animal-pattern tbody');
+            if (animalTable) {
+                const animalKeywords = {
+                    'Horse/馬': '馬', 'Chasse en Inde': 'インド狩り', 'Cat/猫': '猫', 'Jungle Love': 'ジャングルラブ',
+                    'Bird/鳥': '鳥', 'Dog/犬': '犬', 'Les Leopards': 'レオパード', 'Tiger/虎': '虎',
+                    'Zebra/Zèbre': 'ゼブラ', 'Elephant/象': '象', 'Fish/魚': '魚', 'Wildlife': 'ワイルドライフ',
+                    'Butterfly/蝶': '蝶', 'Faune et Flore': '動植物', 'Lion': 'ライオン'
+                };
+                animalTable.innerHTML = Object.keys(animalData)
+                    .sort((a, b) => animalData[b].count - animalData[a].count)
+                    .map(animal => `
+                        <tr>
+                            <td>${animal}</td>
+                            <td><span class="count-badge">${animalData[animal].count}</span></td>
+                            <td class="price">$${animalData[animal].avg_price.toFixed(2)}</td>
+                            <td class="price">$${animalData[animal].median_price.toFixed(2)}</td>
+                            <td>
+                                <a href="https://www.ebay.com/sch/i.html?_nkw=hermes+scarf+${encodeURIComponent(animal.split('/')[0])}&LH_Sold=1" target="_blank" class="search-link">eBay</a>
+                            <input type="checkbox" class="search-checkbox" data-id="hermes_ebay_2">
+                                <a href="https://jp.mercari.com/search?keyword=エルメス%20スカーフ%20${encodeURIComponent(animalKeywords[animal] || animal)}&status=on_sale" target="_blank" class="search-link">メルカリ</a>
+                            <input type="checkbox" class="search-checkbox" data-id="hermes_mercari_3">
+                            </td>
+                        </tr>
+                    `).join('');
+            }
+
+            // Bag Model Table
+            const bagData = analysisData.bag_analysis.by_model;
+            const bagTable = document.querySelector('#table-bag-model tbody');
+            bagTable.innerHTML = Object.keys(bagData)
+                .sort((a, b) => bagData[b].count - bagData[a].count)
+                .map(model => `
+                    <tr>
+                        <td>${model}</td>
+                        <td><span class="count-badge">${bagData[model].count}</span></td>
+                        <td class="price">$${bagData[model].avg_price.toFixed(2)}</td>
+                        <td class="price">$${bagData[model].median_price.toFixed(2)}</td>
+                        <td class="price">$${bagData[model].min_price.toFixed(2)}</td>
+                        <td class="price">$${bagData[model].max_price.toFixed(2)}</td>
+                        <td>
+                            <a href="https://www.ebay.com/sch/i.html?_nkw=hermes+${encodeURIComponent(model)}&LH_Sold=1" target="_blank" class="search-link">eBay</a>
+                            <input type="checkbox" class="search-checkbox" data-id="hermes_ebay_4">
+                            <a href="https://jp.mercari.com/search?keyword=エルメス%20${encodeURIComponent(model)}&status=on_sale" target="_blank" class="search-link">メルカリ</a>
+                            <input type="checkbox" class="search-checkbox" data-id="hermes_mercari_5">
+                        </td>
+                    </tr>
+                `).join('');
+
+            // Accessory Table (汎用分類)
+            const accData = analysisData.accessory_analysis;
+            const accTable = document.querySelector('#table-accessory tbody');
+            accTable.innerHTML = Object.keys(accData)
+                .sort((a, b) => accData[b].count - accData[a].count)
+                .map(type => `
+                    <tr>
+                        <td>${type}</td>
+                        <td><span class="count-badge">${accData[type].count}</span></td>
+                        <td class="price">$${accData[type].avg_price.toFixed(2)}</td>
+                        <td class="price">$${accData[type].median_price.toFixed(2)}</td>
+                        <td>
+                            <a href="https://jp.mercari.com/search?keyword=エルメス%20${encodeURIComponent(type)}&status=on_sale" target="_blank" class="search-link">メルカリ</a>
+                            <input type="checkbox" class="search-checkbox" data-id="hermes_mercari_6">
+                        </td>
+                    </tr>
+                `).join('');
+
+            // Accessory Detail Table (詳細分類)
+            const accDetail = analysisData.accessory_detail;
+            if (accDetail) {
+                const typeKeywords = {
+                    'Bangle - Enamel': 'バングル エナメル', 'Bangle': 'バングル', 'Leather Bracelet': 'レザーブレスレット',
+                    'Clic Clac': 'クリッククラック', 'Clic H': 'クリックH', 'Collier de Chien': 'コリエドシアン',
+                    'Kelly Double Tour': 'ケリードゥブルトゥール', 'Hapi': 'アピ',
+                    'Scarf Ring (Other)': 'スカーフリング', "Scarf Ring - Chaine d'Ancre": 'スカーフリング シェーヌダンクル',
+                    'Scarf Ring - Gold': 'スカーフリング ゴールド', 'Scarf Ring - Cosmos': 'スカーフリング コスモス',
+                    'Cadena/Padlock': 'カデナ', 'Charm': 'チャーム', 'Charm - Rodeo': 'ロデオ チャーム',
+                    'Belt': 'ベルト', 'Belt - Constance': 'コンスタンス ベルト', 'Belt - H Buckle': 'Hベルト',
+                    'Necklace': 'ネックレス', 'Chain Necklace': 'チェーンネックレス', 'Earrings': 'イヤリング',
+                    'Ring': 'リング', 'Brooch/Pin': 'ブローチ', 'Tie - Silk': 'ネクタイ シルク', 'Tie': 'ネクタイ',
+                    'Cufflinks': 'カフリンクス', 'Glove Holder/Filou': 'グローブホルダー'
+                };
+
+                const accDetailTable = document.querySelector('#table-accessory-detail tbody');
+                if (accDetailTable) {
+                    accDetailTable.innerHTML = Object.entries(accDetail.item_type_analysis)
+                        .sort((a, b) => b[1].count - a[1].count)
+                        .map(([type, data]) => {
+                            const jpType = typeKeywords[type] || type;
+                            return `
+                            <tr>
+                                <td><strong>${type}</strong></td>
+                                <td><span class="count-badge">${data.count}</span></td>
+                                <td class="price">$${data.avg_price.toFixed(2)}</td>
+                                <td class="price">$${data.median_price.toFixed(2)}</td>
+                                <td class="price">$${data.min_price.toFixed(2)}</td>
+                                <td class="price">$${data.max_price.toFixed(2)}</td>
+                                <td>
+                                    <a href="https://www.ebay.com/sch/i.html?_nkw=hermes+${encodeURIComponent(type)}&LH_Sold=1" target="_blank" class="search-link">eBay</a>
+                            <input type="checkbox" class="search-checkbox" data-id="hermes_ebay_7">
+                                    <a href="https://jp.mercari.com/search?keyword=エルメス%20${encodeURIComponent(jpType)}&status=on_sale" target="_blank" class="search-link">メルカリ</a>
+                            <input type="checkbox" class="search-checkbox" data-id="hermes_mercari_8">
+                                </td>
+                            </tr>
+                        `}).join('');
+                }
+
+                // Accessory Cross Table (タイプ×素材)
+                const accCrossTable = document.querySelector('#table-accessory-cross tbody');
+                if (accCrossTable && accDetail.type_material_cross) {
+                    const materialKeywords = {
+                        'Enamel': 'エナメル', 'Leather': 'レザー', 'Silk': 'シルク', 'Silver': 'シルバー',
+                        'Gold/GP': 'ゴールド', 'Gold Plated': 'ゴールドプレート', '18K Gold': '18K',
+                        'Horn/Buffalo': 'ホーン'
+                    };
+                    accCrossTable.innerHTML = accDetail.type_material_cross
+                        .map(item => {
+                            const jpType = typeKeywords[item.type] || item.type;
+                            const jpMat = materialKeywords[item.material] || item.material;
+                            return `
+                            <tr>
+                                <td>${item.type}</td>
+                                <td>${item.material}</td>
+                                <td><span class="count-badge">${item.count}</span></td>
+                                <td class="price">$${item.median.toFixed(2)}</td>
+                                <td>
+                                    <a href="https://jp.mercari.com/search?keyword=エルメス%20${encodeURIComponent(jpType)}%20${encodeURIComponent(jpMat)}&status=on_sale" target="_blank" class="search-link">メルカリ</a>
+                            <input type="checkbox" class="search-checkbox" data-id="hermes_mercari_9">
+                                </td>
+                            </tr>
+                        `}).join('');
+                }
+            }
+
+            // Leather Table (汎用分類)
+            const leatherData = analysisData.leather_goods_analysis;
+            const leatherTable = document.querySelector('#table-leather tbody');
+            leatherTable.innerHTML = Object.keys(leatherData)
+                .sort((a, b) => leatherData[b].count - leatherData[a].count)
+                .map(type => `
+                    <tr>
+                        <td>${type}</td>
+                        <td><span class="count-badge">${leatherData[type].count}</span></td>
+                        <td class="price">$${leatherData[type].avg_price.toFixed(2)}</td>
+                        <td class="price">$${leatherData[type].median_price.toFixed(2)}</td>
+                        <td>
+                            <a href="https://jp.mercari.com/search?keyword=エルメス%20${encodeURIComponent(type)}&status=on_sale" target="_blank" class="search-link">メルカリ</a>
+                            <input type="checkbox" class="search-checkbox" data-id="hermes_mercari_10">
+                        </td>
+                    </tr>
+                `).join('');
+
+            // Wallet Model Table (主要モデル詳細)
+            const wallet = analysisData.wallet_analysis;
+            if (wallet) {
+                const walletModelTable = document.querySelector('#table-wallet-model tbody');
+                if (walletModelTable) {
+                    const modelKeywords = {
+                        'Bearn': 'ベアン', 'Bearn Soufflet': 'ベアンスフレ', 'Dogon': 'ドゴン',
+                        'Azap': 'アザップ', "Azap Silk'in": 'アザップシルクイン', 'Azap Compact': 'アザップコンパクト',
+                        'Bastia': 'バスティア', 'Calvi': 'カルヴィ', 'Calvi Duo': 'カルヴィデュオ',
+                        'Kelly Wallet/Pochette': 'ケリーウォレット', 'Constance Wallet': 'コンスタンス財布',
+                        'Citizen Twill': 'シチズンツイル', 'Tarmac': 'タルマック', 'MC2': 'MC2',
+                        'Card Holder/Case': 'カードケース', 'Coin Purse/Case': 'コインケース',
+                        'Key Holder/Case': 'キーケース', 'Long Wallet': '長財布', 'Passport Holder': 'パスポートケース'
+                    };
+                    walletModelTable.innerHTML = Object.entries(wallet.item_type_analysis)
+                        .sort((a, b) => b[1].count - a[1].count)
+                        .map(([model, data]) => {
+                            const materials = wallet.model_detail?.[model]?.materials;
+                            const topMaterials = materials ? Object.entries(materials).slice(0, 3).map(([m, c]) => `${m}(${c})`).join(', ') : '-';
+                            const jpModel = modelKeywords[model] || model;
+                            return `
+                            <tr>
+                                <td><strong>${model}</strong></td>
+                                <td><span class="count-badge">${data.count}</span></td>
+                                <td class="price">$${data.avg_price.toFixed(2)}</td>
+                                <td class="price">$${data.median_price.toFixed(2)}</td>
+                                <td class="price">$${data.min_price.toFixed(2)}</td>
+                                <td class="price">$${data.max_price.toFixed(2)}</td>
+                                <td style="font-size: 11px;">${topMaterials}</td>
+                                <td>
+                                    <a href="https://www.ebay.com/sch/i.html?_nkw=hermes+${encodeURIComponent(model)}&LH_Sold=1" target="_blank" class="search-link">eBay</a>
+                            <input type="checkbox" class="search-checkbox" data-id="hermes_ebay_11">
+                                    <a href="https://jp.mercari.com/search?keyword=エルメス%20${encodeURIComponent(jpModel)}&status=on_sale" target="_blank" class="search-link">メルカリ</a>
+                            <input type="checkbox" class="search-checkbox" data-id="hermes_mercari_12">
+                                </td>
+                            </tr>
+                        `}).join('');
+                }
+
+                // Wallet Cross Table (モデル×素材)
+                const walletCrossTable = document.querySelector('#table-wallet-cross tbody');
+                if (walletCrossTable && wallet.model_material_cross) {
+                    const modelKeywords = {
+                        'Bearn': 'ベアン', 'Dogon': 'ドゴン', "Azap Silk'in": 'アザップシルクイン',
+                        'Bastia': 'バスティア', 'Calvi': 'カルヴィ', 'Coin Purse/Case': 'コインケース',
+                        'Card Holder/Case': 'カードケース', 'Key Holder/Case': 'キーケース',
+                        'Long Wallet': '長財布', 'Wallet (Other)': '財布', 'Azap Compact': 'アザップコンパクト',
+                        'Purse': '小銭入れ'
+                    };
+                    const materialKeywords = {
+                        'Epsom': 'エプソン', 'Togo': 'トゴ', 'Clemence': 'クレマンス', 'Swift': 'スイフト',
+                        'Box Calf': 'ボックスカーフ', 'Chevre/Mysore': 'シェーブル', 'Canvas/Toile': 'キャンバス',
+                        'Leather': 'レザー', 'Silk': 'シルク'
+                    };
+                    walletCrossTable.innerHTML = wallet.model_material_cross
+                        .map(item => {
+                            const jpModel = modelKeywords[item.model] || item.model;
+                            const jpMaterial = materialKeywords[item.material] || item.material;
+                            return `
+                            <tr>
+                                <td>${item.model}</td>
+                                <td>${item.material}</td>
+                                <td><span class="count-badge">${item.count}</span></td>
+                                <td class="price">$${item.median.toFixed(2)}</td>
+                                <td>
+                                    <a href="https://jp.mercari.com/search?keyword=エルメス%20${encodeURIComponent(jpModel)}%20${encodeURIComponent(jpMaterial)}&status=on_sale" target="_blank" class="search-link">メルカリ</a>
+                            <input type="checkbox" class="search-checkbox" data-id="hermes_mercari_13">
+                                </td>
+                            </tr>
+                        `}).join('');
+                }
+            }
+
+            // Parts Table
+            const partsData = analysisData.parts_analysis;
+            const partsTable = document.querySelector('#table-parts tbody');
+            partsTable.innerHTML = Object.keys(partsData)
+                .sort((a, b) => partsData[b].count - partsData[a].count)
+                .map(type => `
+                    <tr>
+                        <td>${type}</td>
+                        <td><span class="count-badge">${partsData[type].count}</span></td>
+                        <td class="price">$${partsData[type].avg_price.toFixed(2)}</td>
+                        <td class="price">$${partsData[type].median_price.toFixed(2)}</td>
+                        <td>
+                            <a href="https://jp.mercari.com/search?keyword=エルメス%20${encodeURIComponent(type)}&status=on_sale" target="_blank" class="search-link">メルカリ</a>
+                            <input type="checkbox" class="search-checkbox" data-id="hermes_mercari_14">
+                        </td>
+                    </tr>
+                `).join('');
+
+            // Bangle Material Table
+            const bangleData = analysisData.bangle_by_material;
+            const bangleTable = document.querySelector('#table-bangle-material tbody');
+            bangleTable.innerHTML = Object.keys(bangleData)
+                .sort((a, b) => bangleData[b].count - bangleData[a].count)
+                .map(mat => `
+                    <tr>
+                        <td>${mat}</td>
+                        <td><span class="count-badge">${bangleData[mat].count}</span></td>
+                        <td class="price">$${bangleData[mat].avg_price.toFixed(2)}</td>
+                        <td class="price">$${bangleData[mat].median_price.toFixed(2)}</td>
+                        <td>
+                            <a href="https://jp.mercari.com/search?keyword=エルメス%20バングル%20${encodeURIComponent(mat)}&status=on_sale" target="_blank" class="search-link">メルカリ</a>
+                            <input type="checkbox" class="search-checkbox" data-id="hermes_mercari_15">
+                        </td>
+                    </tr>
+                `).join('');
+
+            // Scarf Ring Table
+            const ringData = analysisData.scarf_ring_by_model;
+            const ringTable = document.querySelector('#table-scarf-ring tbody');
+            ringTable.innerHTML = Object.keys(ringData)
+                .sort((a, b) => ringData[b].count - ringData[a].count)
+                .map(model => `
+                    <tr>
+                        <td>${model}</td>
+                        <td><span class="count-badge">${ringData[model].count}</span></td>
+                        <td class="price">$${ringData[model].avg_price.toFixed(2)}</td>
+                        <td class="price">$${ringData[model].median_price.toFixed(2)}</td>
+                        <td>
+                            <a href="https://jp.mercari.com/search?keyword=エルメス%20スカーフリング%20${encodeURIComponent(model.replace('/Chaine', ''))}&status=on_sale" target="_blank" class="search-link">メルカリ</a>
+                            <input type="checkbox" class="search-checkbox" data-id="hermes_mercari_16">
+                        </td>
+                    </tr>
+                `).join('');
+
+            // Tie Pattern Table
+            const tieData = analysisData.tie_by_pattern;
+            const tieTable = document.querySelector('#table-tie-pattern tbody');
+            tieTable.innerHTML = Object.keys(tieData)
+                .sort((a, b) => tieData[b].count - tieData[a].count)
+                .map(pattern => {
+                    const jpPattern = pattern.replace('Animal/動物', '動物').replace('Horse/馬', '馬').replace('Geometric/幾何学', '幾何学').replace('Chain/鎖', '鎖').replace('Rope/Belt', 'ベルト').replace('Floral/花', '花').replace('H Logo', 'H');
+                    return `
+                    <tr>
+                        <td>${pattern}</td>
+                        <td><span class="count-badge">${tieData[pattern].count}</span></td>
+                        <td class="price">$${tieData[pattern].avg_price.toFixed(2)}</td>
+                        <td class="price">$${tieData[pattern].median_price.toFixed(2)}</td>
+                        <td>
+                            <a href="https://jp.mercari.com/search?keyword=エルメス%20ネクタイ%20${encodeURIComponent(jpPattern)}&status=on_sale" target="_blank" class="search-link">メルカリ</a>
+                            <input type="checkbox" class="search-checkbox" data-id="hermes_mercari_17">
+                        </td>
+                    </tr>
+                `}).join('');
+
+            // Other Detail Table - 新しい細分化データ
+            const otherDetailData = analysisData.other_detail_analysis;
+            if (otherDetailData) {
+                const otherData = otherDetailData.detail_categories;
+                const otherTable = document.querySelector('#table-other-detail tbody');
+
+                // カテゴリ→メルカリキーワードのマッピング
+                const otherKeywords = {
+                    'Accessory/アクセサリー（その他）': 'アクセサリー',
+                    'Bag/バッグ（その他）': 'バッグ',
+                    'Scarf/スカーフ（その他）': 'スカーフ',
+                    'Wallet/革小物（その他）': '財布',
+                    'Knitwear/ニット': 'ニット',
+                    'Watch/時計': '時計',
+                    'Playing Cards/トランプ': 'トランプ',
+                    'Sandals/サンダル': 'サンダル オラン',
+                    'Hand Towel/ハンドタオル': 'タオル',
+                    'Beach Towel/ビーチタオル': 'ビーチタオル',
+                    'Sneakers/スニーカー': 'スニーカー',
+                    'Hat/帽子': '帽子',
+                    'Shoes-Other/靴その他': '靴',
+                    'Shirt/Blouse/シャツ・ブラウス': 'シャツ',
+                    'Gloves/手袋': '手袋',
+                    'Frame/フォトフレーム': 'フォトフレーム',
+                    'Jacket/Coat/ジャケット・コート': 'ジャケット',
+                    'Glassware/グラス': 'グラス',
+                    'Strap/ストラップ': 'ショルダーストラップ',
+                    'Equestrian/馬具': '馬具',
+                    'Loafers/ローファー': 'ローファー',
+                    'Comb/コーム': 'コーム',
+                    'Suit/スーツ': 'スーツ',
+                    'Pants/Skirt/パンツ・スカート': 'パンツ',
+                    'Petit h/プティアッシュ': 'プティアッシュ',
+                    'Object/オブジェ': 'オブジェ',
+                    'Wine Tools/ワインツール': 'ソムリエナイフ',
+                    'Mobile Battery/モバイルバッテリー': 'モバイルバッテリー',
+                    'Baby/ベビー用品': 'ベビー'
+                };
+
+                otherTable.innerHTML = Object.keys(otherData)
+                    .filter(cat => !cat.includes('除外') && !cat.includes('Invalid'))
+                    .sort((a, b) => otherData[b].count - otherData[a].count)
+                    .map(cat => {
+                        const d = otherData[cat];
+                        const jpKeyword = otherKeywords[cat] || cat.split('/')[1] || cat;
+                        const majorCat = getMajorCategory(cat);
+                        const majorColor = {
+                            'Misc Hermes/エルメス雑貨': '#FF6B00',
+                            'Clothing/衣類': '#4CAF50',
+                            'Shoes/靴': '#3F51B5',
+                            'Home/ホーム': '#9C27B0',
+                            'Watch/時計': '#00BCD4',
+                            'Stationery & Games/ステーショナリー': '#FFC107',
+                            'Fashion Accessories/ファッション小物': '#E91E63',
+                            'Beauty/ビューティー': '#FF5722',
+                            'Tech/テック': '#607D8B',
+                            'Packaging/パッケージング': '#795548'
+                        }[majorCat] || '#9E9E9E';
+
+                        return `
+                        <tr>
+                            <td><span style="background: ${majorColor}; color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 11px;">${cat.split('/')[1] || cat}</span></td>
+                            <td><span class="count-badge">${d.count}</span></td>
+                            <td class="price">$${d.median_price.toFixed(2)}</td>
+                            <td class="price">$${d.avg_price.toFixed(2)}</td>
+                            <td class="price">$${d.max_price.toFixed(2)}</td>
+                            <td>
+                                <a href="https://jp.mercari.com/search?keyword=エルメス%20${encodeURIComponent(jpKeyword)}&status=on_sale" target="_blank" class="search-link">メルカリ</a>
+                            <input type="checkbox" class="search-checkbox" data-id="hermes_mercari_18">
+                            </td>
+                        </tr>
+                    `}).join('');
+
+                // Other Cross Table - 大カテゴリ×サブカテゴリ
+                const crossTable = document.querySelector('#table-other-cross tbody');
+                if (crossTable) {
+                    const major = otherDetailData.major_categories;
+                    let crossRows = [];
+                    Object.keys(major).filter(m => m !== 'Exclude/除外').forEach(majorCat => {
+                        const subs = Object.keys(otherData)
+                            .filter(cat => getMajorCategory(cat) === majorCat)
+                            .sort((a, b) => otherData[b].count - otherData[a].count);
+                        subs.forEach((sub, i) => {
+                            const d = otherData[sub];
+                            crossRows.push({
+                                major: i === 0 ? majorCat.split('/')[1] || majorCat : '',
+                                majorFull: majorCat,
+                                sub: sub.split('/')[1] || sub,
+                                count: d.count,
+                                median: d.median_price,
+                                rowspan: i === 0 ? subs.length : 0
+                            });
+                        });
+                    });
+
+                    crossTable.innerHTML = crossRows.map(r => `
+                        <tr>
+                            ${r.rowspan > 0 ? `<td rowspan="${r.rowspan}" style="font-weight: bold; background: var(--bg-card-hover);">${r.major}</td>` : ''}
+                            <td>${r.sub}</td>
+                            <td><span class="count-badge">${r.count}</span></td>
+                            <td class="price">$${r.median.toFixed(2)}</td>
+                        </tr>
+                    `).join('');
+                }
+            }
+        }
+
+        // ===== TABLE UTILITIES =====
+        function filterTable(tableId, query) {
+            const table = document.getElementById(tableId);
+            const rows = table.querySelectorAll('tbody tr');
+            query = query.toLowerCase();
+
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        }
+
+        function sortTable(tableId, colIndex) {
+            const table = document.getElementById(tableId);
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            const isNumeric = colIndex > 0;
+            rows.sort((a, b) => {
+                let aVal = a.cells[colIndex].textContent.trim();
+                let bVal = b.cells[colIndex].textContent.trim();
+
+                if (isNumeric) {
+                    aVal = parseFloat(aVal.replace(/[$,]/g, '')) || 0;
+                    bVal = parseFloat(bVal.replace(/[$,]/g, '')) || 0;
+                    return bVal - aVal;
+                }
+                return aVal.localeCompare(bVal);
+            });
+
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        // ===== SEARCH FILTER =====
+        function setupSearchFilters() {
+            // 財布モデル検索
+            const searchInput = document.getElementById('search-wallet-model');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    const term = e.target.value.toLowerCase();
+                    const rows = document.querySelectorAll('#table-wallet-model tbody tr');
+                    rows.forEach(row => {
+                        const text = row.textContent.toLowerCase();
+                        row.style.display = text.includes(term) ? '' : 'none';
+                    });
+                });
+            }
+
+            // アクセサリータイプ検索
+            const accSearchInput = document.getElementById('search-accessory-type');
+            if (accSearchInput) {
+                accSearchInput.addEventListener('input', (e) => {
+                    const term = e.target.value.toLowerCase();
+                    const rows = document.querySelectorAll('#table-accessory-detail tbody tr');
+                    rows.forEach(row => {
+                        const text = row.textContent.toLowerCase();
+                        row.style.display = text.includes(term) ? '' : 'none';
+                    });
+                });
+            }
+
+            // その他カテゴリ検索
+            const otherSearchInput = document.getElementById('search-other-category');
+            if (otherSearchInput) {
+                otherSearchInput.addEventListener('input', (e) => {
+                    const term = e.target.value.toLowerCase();
+                    const rows = document.querySelectorAll('#table-other-detail tbody tr');
+                    rows.forEach(row => {
+                        const text = row.textContent.toLowerCase();
+                        row.style.display = text.includes(term) ? '' : 'none';
+                    });
+                });
+            }
+        }
+
+        // ===== INIT =====
+        document.addEventListener('DOMContentLoaded', () => {
+            drawAllCharts();
+            setupSearchFilters();
+        });
+    
+        // チェックボックスのlocalStorage管理
+        function initCheckboxes() {
+            document.addEventListener('DOMContentLoaded', function() {
+                // ページ読み込み時にチェック状態を復元
+                const checkboxes = document.querySelectorAll('.search-checkbox');
+                checkboxes.forEach(checkbox => {
+                    const checkboxId = checkbox.getAttribute('data-id');
+                    if (checkboxId) {
+                        const isChecked = localStorage.getItem(`checkbox_${checkboxId}`) === 'true';
+                        checkbox.checked = isChecked;
+                    }
+
+                    // チェックボックスの変更を監視
+                    checkbox.addEventListener('change', function() {
+                        const checkboxId = this.getAttribute('data-id');
+                        if (checkboxId) {
+                            localStorage.setItem(`checkbox_${checkboxId}`, this.checked);
+                        }
+                    });
+                });
+            });
+        }
+
+        // 初期化関数を呼び出し
+        initCheckboxes();
+</script>
+</body>
+</html>
